@@ -1,0 +1,1 @@
+CREATE (doc:Document {doc_id: 'AGO 1976-02.pdf_0', ref_name: 'AGO 1976-02', ref_list: ['Test 1', 'Test 2']})
