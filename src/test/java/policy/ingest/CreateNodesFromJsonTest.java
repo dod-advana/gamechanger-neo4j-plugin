@@ -2,7 +2,6 @@ package policy.ingest;
 
 import org.neo4j.graphdb.Label;
 import org.neo4j.logging.NullLog;
-import policy.ingest.CreateNodesFromJson;
 
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
@@ -69,7 +68,9 @@ public class CreateNodesFromJsonTest {
 
             Util.Outgoing expected = new Util.Outgoing(3, 3, 12);
             Util.Outgoing actual = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx, log);
+            Util.Outgoing duplicate = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx, log);
 
+            assertEquals("The outgoing should be all 0s because its a duplicate", 0, duplicate.nodesCreated);
             assertEquals("The outgoing should match the expected nodes created", expected.nodesCreated, actual.nodesCreated);
             assertEquals("The outgoing should match the expected properties set", expected.propertiesSet, actual.propertiesSet);
             assertEquals("The outgoing should match the expected relationships created", expected.relationshipsCreated, actual.relationshipsCreated);

@@ -74,9 +74,6 @@ public class CreateNodesFromJson {
             if (isNull(node)) {
                 node = tx.createNode(Util.labels(Collections.singletonList("Document")));
                 nodesCreated++;
-            } else {
-                log.info(String.format("Nothing created as document already exists for: %s", docId));
-                return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
             }
 
             // Keyw_5 Array
@@ -240,14 +237,23 @@ public class CreateNodesFromJson {
                 nodesCreated++;
                 propertiesSet++;
             }
-            Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("CONTAINS"));
-            containsRel.setProperty("relevancy", topicsMap.get(key));
-            relationshipsCreated++;
-            propertiesSet++;
-            Relationship isInRel = tmp.createRelationshipTo(documentNode, RelationshipType.withName("IS_IN"));
-            isInRel.setProperty("relevancy", topicsMap.get(key));
-            relationshipsCreated++;
-            propertiesSet++;
+            Iterable<Relationship> relationships = documentNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("CONTAINS"));
+            boolean hasRelationship = false;
+            for (Relationship rel : relationships) {
+                if (rel.getEndNode().getProperty("name") == key) {
+                    hasRelationship = true;
+                }
+            }
+            if (!hasRelationship) {
+                Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("CONTAINS"));
+                containsRel.setProperty("relevancy", topicsMap.get(key));
+                relationshipsCreated++;
+                propertiesSet++;
+                Relationship isInRel = tmp.createRelationshipTo(documentNode, RelationshipType.withName("IS_IN"));
+                isInRel.setProperty("relevancy", topicsMap.get(key));
+                relationshipsCreated++;
+                propertiesSet++;
+            }
         }
         return Map.ofEntries(
             entry("nodesCreated", nodesCreated),
@@ -276,11 +282,19 @@ public class CreateNodesFromJson {
                 nodesCreated++;
                 propertiesSet++;
             }
-
-            Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("MENTIONS"));
-            containsRel.setProperty("count", mentionsCount);
-            relationshipsCreated++;
-            propertiesSet++;
+            Iterable<Relationship> relationships = documentNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("MENTIONS"));
+            boolean hasRelationship = false;
+            for (Relationship rel : relationships) {
+                if (rel.getEndNode().getProperty("name") == key) {
+                    hasRelationship = true;
+                }
+            }
+            if (!hasRelationship) {
+                Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("MENTIONS"));
+                containsRel.setProperty("count", mentionsCount);
+                relationshipsCreated++;
+                propertiesSet++;
+            }
         }
 
         return Map.ofEntries(
