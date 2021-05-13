@@ -17,6 +17,10 @@ import static policy.utils.Util.setProperty;
 
 public class CreateNodesFromJson {
 
+    private final static String nodesCreatedString = "nodesCreated";
+    private final static String propertiesSetString = "propertiesSet";
+    private final static String relationshipsCreatedString = "relationshipsCreated";
+
     // This gives us a log instance that outputs messages to the
     // standard log, normally found under `data/log/console.log`
     @Context
@@ -56,7 +60,7 @@ public class CreateNodesFromJson {
             tx.commit();
             return Stream.of(out);
         } catch (Exception e) {
-            throw new RuntimeException("Error creating node from json", e);
+            throw new RuntimeException("Error creating entity node from json", e);
         }
     }
 
@@ -90,16 +94,16 @@ public class CreateNodesFromJson {
                 topics.put(jsonField.getKey(), jsonField.getValue().floatValue());
             }
             Map<String, Integer> topicsOutput = createTopicNodesAndRelationships(node, topics, tx);
-            nodesCreated += topicsOutput.get("nodesCreated");
-            propertiesSet += topicsOutput.get("propertiesSet");
-            relationshipsCreated += topicsOutput.get("relationshipsCreated");
+            nodesCreated += topicsOutput.get(nodesCreatedString);
+            propertiesSet += topicsOutput.get(propertiesSetString);
+            relationshipsCreated += topicsOutput.get(relationshipsCreatedString);
 
             // Entities Object
             JsonNode entitiesNode = jsonNode.get("entities");
             Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiesNode, tx);
-            nodesCreated += entitiesOutput.get("nodesCreated");
-            propertiesSet += entitiesOutput.get("propertiesSet");
-            relationshipsCreated += entitiesOutput.get("relationshipsCreated");
+            nodesCreated += entitiesOutput.get(nodesCreatedString);
+            propertiesSet += entitiesOutput.get(propertiesSetString);
+            relationshipsCreated += entitiesOutput.get(relationshipsCreatedString);
 
             // Reference info
             String docNum = jsonNode.get("doc_num").asText("");
@@ -190,6 +194,7 @@ public class CreateNodesFromJson {
                     entry("branch", entityNode.get("Government_Branch").asText("")),
                     entry("type", "organization")
                 );
+
                 propertiesSet += setProperties(node, properties);
 
                 Node parentNode = tx.findNode(Label.label("Entity"), "name", parentName);
@@ -199,8 +204,11 @@ public class CreateNodesFromJson {
                     nodesCreated++;
                     propertiesSet++;
                 }
-                node.createRelationshipTo(parentNode, RelationshipType.withName("CHILD_OF"));
-                relationshipsCreated++;
+
+                if(!isNull(node)) {
+                    node.createRelationshipTo(parentNode, RelationshipType.withName("CHILD_OF"));
+                    relationshipsCreated++;
+                }
 
                 String[] relatedEntities = entityNode.get("Related_Agency").asText("").split(";");
                 for (final String relatedEntity : relatedEntities) {
@@ -256,9 +264,9 @@ public class CreateNodesFromJson {
             }
         }
         return Map.ofEntries(
-            entry("nodesCreated", nodesCreated),
-            entry("propertiesSet", propertiesSet),
-            entry("relationshipsCreated", relationshipsCreated)
+            entry(nodesCreatedString, nodesCreated),
+            entry(propertiesSetString, propertiesSet),
+            entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
@@ -298,14 +306,14 @@ public class CreateNodesFromJson {
         }
 
         return Map.ofEntries(
-            entry("nodesCreated", nodesCreated),
-            entry("propertiesSet", propertiesSet),
-            entry("relationshipsCreated", relationshipsCreated)
+            entry(nodesCreatedString, nodesCreated),
+            entry(propertiesSetString, propertiesSet),
+            entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
     private int setProperties(Node node, Map<String, Object> properties)  {
-        if (node == null) return 0;
+        if (isNull(node)) return 0;
         int propsSet = 0;
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             setProperty(node, entry.getKey(), entry.getValue());

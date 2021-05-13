@@ -3,6 +3,8 @@ package policy.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.internal.helpers.collection.Iterables;
 
 import java.util.*;
@@ -52,5 +54,28 @@ public class Util {
             this.relationshipsCreated = relationshipsCreated;
             this.propertiesSet = propertiesSet;
         }
+    }
+
+    public static class NodeRelationshipWrapper {
+        public final List<Node> nodes;
+        public final List<Relationship> relationships;
+
+        public NodeRelationshipWrapper(List<Node> nodes, List<Relationship> relationships) {
+            this.nodes = nodes;
+            this.relationships = relationships;
+        }
+    }
+
+    public static Map<String,Object> map(Object ... values) {
+        return Util._map(values);
+    }
+
+    private static <T> Map<String, T> _map(T ... values) {
+        Map<String, T> map = new LinkedHashMap<>();
+        for (int i = 0; i < values.length; i+=2) {
+            if (values[i] == null) continue;
+            map.put(values[i].toString(),values[i+1]);
+        }
+        return map;
     }
 }

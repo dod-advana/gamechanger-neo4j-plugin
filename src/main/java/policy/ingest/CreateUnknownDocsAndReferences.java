@@ -1,6 +1,5 @@
 package policy.ingest;
 
-import org.neo4j.cypher.internal.expressions.In;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;
@@ -14,6 +13,10 @@ import static java.util.Map.entry;
 import static java.util.Objects.isNull;
 
 public class CreateUnknownDocsAndReferences {
+
+    private final static String nodesCreatedString = "nodesCreated";
+    private final static String propertiesSetString = "propertiesSet";
+    private final static String relationshipsCreatedString = "relationshipsCreated";
 
     // This gives us a log instance that outputs messages to the
     // standard log, normally found under `data/log/console.log`
@@ -76,9 +79,9 @@ public class CreateUnknownDocsAndReferences {
             // Based on the map, empty lists mean no documents for that reference so create a UNKN_Document Node
             // also create relationships
             Map<String, Integer> uknDocsAndRefsOutput = createReferences(refMap, mapDocsToReferences, tx, log);
-            nodesCreated += uknDocsAndRefsOutput.get("nodesCreated");
-            propertiesSet += uknDocsAndRefsOutput.get("propertiesSet");
-            relationshipsCreated += uknDocsAndRefsOutput.get("relationshipsCreated");
+            nodesCreated += uknDocsAndRefsOutput.get(nodesCreatedString);
+            propertiesSet += uknDocsAndRefsOutput.get(propertiesSetString);
+            relationshipsCreated += uknDocsAndRefsOutput.get(relationshipsCreatedString);
 
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
@@ -104,9 +107,9 @@ public class CreateUnknownDocsAndReferences {
                 } else {
                     tmpCounts = createKnownDocReferences(refNodes, docNode);
                 }
-                tmpNodesCreated += tmpCounts.get("nodesCreated");
-                tmpPropertiesSet += tmpCounts.get("propertiesSet");
-                tmpRelationshipsCreated += tmpCounts.get("relationshipsCreated");
+                tmpNodesCreated += tmpCounts.get(nodesCreatedString);
+                tmpPropertiesSet += tmpCounts.get(propertiesSetString);
+                tmpRelationshipsCreated += tmpCounts.get(relationshipsCreatedString);
             }
             log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", tmpNodesCreated, tmpRelationshipsCreated, tmpPropertiesSet, docNode.getProperty("doc_id")));
             nodesCreated += tmpNodesCreated;
@@ -115,9 +118,9 @@ public class CreateUnknownDocsAndReferences {
         }
 
         return Map.ofEntries(
-                entry("nodesCreated", nodesCreated),
-                entry("propertiesSet", propertiesSet),
-                entry("relationshipsCreated", relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
@@ -155,9 +158,9 @@ public class CreateUnknownDocsAndReferences {
         }
 
         return Map.ofEntries(
-                entry("nodesCreated", nodesCreated),
-                entry("propertiesSet", propertiesSet),
-                entry("relationshipsCreated", relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
@@ -181,9 +184,9 @@ public class CreateUnknownDocsAndReferences {
         }
 
         return Map.ofEntries(
-                entry("nodesCreated", nodesCreated),
-                entry("propertiesSet", propertiesSet),
-                entry("relationshipsCreated", relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 }
