@@ -3,7 +3,7 @@ def FAILING_TESTS = ""
 pipeline {
    agent any
    tools {
-        maven 'Maven 3.3.9'
+        maven 'Maven 3.6.1'
         jdk 'jdk9'
    }
    stages {
