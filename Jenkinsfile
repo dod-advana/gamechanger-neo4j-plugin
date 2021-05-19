@@ -2,11 +2,15 @@ def FAILING_TESTS = ""
 
 pipeline {
    agent any
+   tools {
+        maven 'Maven 3.6.1'
+        jdk 'JDK 11'
+   }
    stages {
        stage ('Initialize') {
            steps {
                sh '''
-                   echo "JAVA_HOME = ${JAVA_HOME}"
+                   JAVA_HOME = /var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin
                    echo "PATH = ${PATH}"
                    echo "M2_HOME = ${M2_HOME}"
                '''
@@ -17,11 +21,7 @@ pipeline {
            steps {
                script{
                    if(params.Test){
-                         docker.withRegistry('http://092912502985.dkr.ecr.us-east-1.amazonaws.com') {
-                            docker.image('maven:3.8.1-jdk-11').inside {
-                                sh 'mvn test'
-                            }
-                        }
+                        sh 'mvn test'
                    } else {
                         echo 'Skipping GAMECHANGER Neo4j Plugin Unit Tests'
                    }
