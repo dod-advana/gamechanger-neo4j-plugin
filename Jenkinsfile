@@ -2,6 +2,9 @@ def FAILING_TESTS = ""
 
 pipeline {
    agent any
+   environment {
+        JAVA_HOME = '/var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin'
+   }
    tools {
         maven 'Maven 3.6.1'
         jdk 'JDK 11'
@@ -10,7 +13,7 @@ pipeline {
        stage ('Initialize') {
            steps {
                sh '''
-                   JAVA_HOME = /var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin
+                   echo "${JAVA_HOME}"
                    echo "PATH = ${PATH}"
                    echo "M2_HOME = ${M2_HOME}"
                '''
