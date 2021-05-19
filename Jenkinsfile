@@ -21,9 +21,10 @@ pipeline {
                script{
                    if(params.Test){
                         sh 'mvn test'
-                    } else {
+                   } else {
                         echo 'Skipping GAMECHANGER Neo4j Plugin Unit Tests'
-                    }
+                   }
+               }
            }
            post {
                 success {
