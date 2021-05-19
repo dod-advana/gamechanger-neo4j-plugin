@@ -2,7 +2,7 @@ def FAILING_TESTS = ""
 
 pipeline {
     agent {
-       docker { image 'maven:3.8.1-jdk-11' }
+       docker { image 'http://092912502985.dkr.ecr.us-east-1.amazonaws.com/maven:3.8.1-jdk-11' }
    }
    stages {
        stage ('Initialize') {
