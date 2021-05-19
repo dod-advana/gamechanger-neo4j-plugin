@@ -1,6 +1,7 @@
 def FAILING_TESTS = ""
 
 pipeline {
+   agent any
    stages {
        stage ('Initialize') {
            steps {
