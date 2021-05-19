@@ -16,10 +16,31 @@ pipeline {
            }
        }
 
-       stage ('Build') {
+       stage ('Test') {
            steps {
-               echo 'This is a minimal pipeline.'
+               script{
+                   if(params.Test){
+                        sh 'mvn test'
+                    } else {
+                        echo 'Skipping GAMECHANGER Neo4j Plugin Unit Tests'
+                    }
            }
+           post {
+                success {
+                    script {
+                        if(params.Notify && Params.Test) {
+                            slackSend(color: '#00FF00', message: "Gamechanger Neo4j Plugin Test *SUCCESS*.", channel: 'gamechanger-jenkins')
+                        }
+                    }
+                }
+                failure {
+                    script {
+                        if (params.Notify && Params.Test) {
+                            slackSend(color: '#FF9FA1', message: "Gamechanger Neo4j Plugin Test *FAILURE*.", channel: 'gamechanger-jenkins')
+                        }
+                    }
+                }
+            }
        }
    }
 }
