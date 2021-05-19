@@ -1,9 +1,6 @@
 def FAILING_TESTS = ""
 
 pipeline {
-    agent {
-       docker { image 'http://092912502985.dkr.ecr.us-east-1.amazonaws.com/maven:3.8.1-jdk-11' }
-   }
    stages {
        stage ('Initialize') {
            steps {
@@ -19,7 +16,11 @@ pipeline {
            steps {
                script{
                    if(params.Test){
-                        sh 'JAVA_HOME=/var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin/java mvn test'
+                         docker.withRegistry('http://092912502985.dkr.ecr.us-east-1.amazonaws.com') {
+                            docker.image('maven:3.8.1-jdk-11').inside {
+                                sh 'mvn test'
+                            }
+                        }
                    } else {
                         echo 'Skipping GAMECHANGER Neo4j Plugin Unit Tests'
                    }
