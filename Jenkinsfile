@@ -24,7 +24,7 @@ pipeline {
            steps {
                script{
                    if(params.Test){
-                        sh 'mvn test'
+                        sh 'JAVA_HOME=/var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin/java mvn test'
                    } else {
                         echo 'Skipping GAMECHANGER Neo4j Plugin Unit Tests'
                    }
