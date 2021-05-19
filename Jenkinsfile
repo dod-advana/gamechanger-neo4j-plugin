@@ -10,6 +10,7 @@ pipeline {
        stage ('Initialize') {
            steps {
                sh '''
+                   JAVA_HOME = /var/lib/jenkins/tools/hudson.model.JDK/JDK_11/bin
                    echo "PATH = ${PATH}"
                    echo "M2_HOME = ${M2_HOME}"
                '''
