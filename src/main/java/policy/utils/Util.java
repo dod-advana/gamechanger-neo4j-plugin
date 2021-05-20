@@ -45,9 +45,9 @@ public class Util {
     }
 
     public static class Outgoing {
-        public Number nodesCreated;
-        public Number propertiesSet;
-        public Number relationshipsCreated;
+        public final Number nodesCreated;
+        public final Number propertiesSet;
+        public final Number relationshipsCreated;
 
         public Outgoing(int nodesCreated, int relationshipsCreated, int propertiesSet) {
             this.nodesCreated = nodesCreated;
