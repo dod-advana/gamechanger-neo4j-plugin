@@ -38,7 +38,7 @@ public class CreateNodesFromJson {
     public Stream<Util.Outgoing> createDocumentNodesFromJson(@Name("json") String json) {
         try (Transaction tx = db.beginTx())
         {
-            Util.Outgoing out = handleCreateDocumentNodesFromJson(json, tx, log);
+            Util.Outgoing out = handleCreateDocumentNodesFromJson(json, tx);
             tx.commit();
             return Stream.of(out);
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class CreateNodesFromJson {
     public Stream<Util.Outgoing> createEntityNodesFromJson(@Name("json") String json) {
         try (Transaction tx = db.beginTx())
         {
-            Util.Outgoing out = handleCreateEntityNodesFromJson(json, tx, log);
+            Util.Outgoing out = handleCreateEntityNodesFromJson(json, tx);
             tx.commit();
             return Stream.of(out);
         } catch (Exception e) {
@@ -64,7 +64,7 @@ public class CreateNodesFromJson {
         }
     }
 
-    public Util.Outgoing handleCreateDocumentNodesFromJson(String json, Transaction tx, Log log) {
+    public Util.Outgoing handleCreateDocumentNodesFromJson(String json, Transaction tx) {
         try {
             int nodesCreated = 0;
             int propertiesSet = 0;
@@ -157,14 +157,13 @@ public class CreateNodesFromJson {
 
             propertiesSet += setProperties(node, properties);
 
-            // log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", nodesCreated, relationshipsCreated, propertiesSet, docId));
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
             throw new RuntimeException("Can't parse json", e);
         }
     }
 
-    public Util.Outgoing handleCreateEntityNodesFromJson(String json, Transaction tx, Log log) {
+    public Util.Outgoing handleCreateEntityNodesFromJson(String json, Transaction tx) {
         try {
             int nodesCreated = 0;
             int propertiesSet = 0;
@@ -225,7 +224,6 @@ public class CreateNodesFromJson {
                 }
             }
 
-            // log.info(String.format("%d nodes created, %d relationships created, %d properties set for entities list", nodesCreated, relationshipsCreated, propertiesSet));
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
             throw new RuntimeException("Can't parse json", e);

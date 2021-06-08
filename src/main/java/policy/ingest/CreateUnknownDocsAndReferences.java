@@ -112,7 +112,6 @@ public class CreateUnknownDocsAndReferences {
                     tmpPropertiesSet += tmpCounts.get(propertiesSetString);
                     tmpRelationshipsCreated += tmpCounts.get(relationshipsCreatedString);
                 }
-                // log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", tmpNodesCreated, tmpRelationshipsCreated, tmpPropertiesSet, docNode.getProperty("doc_id")));
                 nodesCreated += tmpNodesCreated;
                 propertiesSet += tmpPropertiesSet;
                 relationshipsCreated += tmpRelationshipsCreated;
@@ -132,11 +131,13 @@ public class CreateUnknownDocsAndReferences {
         int propertiesSet = 0;
         int relationshipsCreated = 0;
 
+        String uknDocLabel = "UKN Document: ";
+
         try {
-            Node node = tx.findNode(Label.label("UKN_Document"), "doc_id", "UKN Document: " + ref);
+            Node node = tx.findNode(Label.label("UKN_Document"), "doc_id", uknDocLabel + ref);
             if (isNull(node)) {
                 node = tx.createNode(Util.labels(Collections.singletonList("UKN_Document")));
-                node.setProperty("doc_id", "UKN Document: " + ref);
+                node.setProperty("doc_id", uknDocLabel + ref);
                 propertiesSet++;
                 nodesCreated++;
             }
@@ -144,8 +145,8 @@ public class CreateUnknownDocsAndReferences {
             String docNum = ref.replaceFirst(docType, "").trim();
             node.setProperty("ref_name", ref);
             node.setProperty("type", "ukn_document");
-            node.setProperty("name", "UKN Document: " + ref);
-            node.setProperty("title", "UKN Document: " + ref);
+            node.setProperty("name", uknDocLabel + ref);
+            node.setProperty("title", uknDocLabel + ref);
             node.setProperty("doc_type", docType);
             node.setProperty("doc_num", docNum);
             propertiesSet += 6;
