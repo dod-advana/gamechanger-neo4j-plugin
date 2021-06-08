@@ -157,7 +157,7 @@ public class CreateNodesFromJson {
 
             propertiesSet += setProperties(node, properties);
 
-            log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", nodesCreated, relationshipsCreated, propertiesSet, docId));
+            // log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", nodesCreated, relationshipsCreated, propertiesSet, docId));
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
             throw new RuntimeException("Can't parse json", e);
@@ -225,7 +225,7 @@ public class CreateNodesFromJson {
                 }
             }
 
-            log.info(String.format("%d nodes created, %d relationships created, %d properties set for entities list", nodesCreated, relationshipsCreated, propertiesSet));
+            // log.info(String.format("%d nodes created, %d relationships created, %d properties set for entities list", nodesCreated, relationshipsCreated, propertiesSet));
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
             throw new RuntimeException("Can't parse json", e);
