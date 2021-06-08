@@ -132,12 +132,13 @@ public class CreateUnknownDocsAndReferences {
         int relationshipsCreated = 0;
 
         String uknDocLabel = "UKN Document: ";
+        String docIdLabel = "doc_id";
 
         try {
-            Node node = tx.findNode(Label.label("UKN_Document"), "doc_id", uknDocLabel + ref);
+            Node node = tx.findNode(Label.label("UKN_Document"), docIdLabel, uknDocLabel + ref);
             if (isNull(node)) {
                 node = tx.createNode(Util.labels(Collections.singletonList("UKN_Document")));
-                node.setProperty("doc_id", uknDocLabel + ref);
+                node.setProperty(docIdLabel, uknDocLabel + ref);
                 propertiesSet++;
                 nodesCreated++;
             }
@@ -153,7 +154,7 @@ public class CreateUnknownDocsAndReferences {
             Iterable<Relationship> relationships = docNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("REFERENCES_UKN"));
             boolean hasRelationship = false;
             for (Relationship rel : relationships) {
-                if (rel.getEndNode().getProperty("doc_id") == node.getProperty("doc_id")) {
+                if (rel.getEndNode().getProperty(docIdLabel) == node.getProperty(docIdLabel)) {
                     hasRelationship = true;
                 }
             }
@@ -176,12 +177,14 @@ public class CreateUnknownDocsAndReferences {
         int propertiesSet = 0;
         int relationshipsCreated = 0;
 
+        String docIdLabel = "doc_id";
+
         try {
             for (Node refDoc : refNodes) {
                 Iterable<Relationship> relationships = docNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("REFERENCES"));
                 boolean hasRelationship = false;
                 for (Relationship rel : relationships) {
-                    if (rel.getEndNode().getProperty("doc_id") == refDoc.getProperty("doc_id")) {
+                    if (rel.getEndNode().getProperty(docIdLabel) == refDoc.getProperty(docIdLabel)) {
                         hasRelationship = true;
                     }
                 }
