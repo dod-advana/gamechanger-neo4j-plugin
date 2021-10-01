@@ -42,9 +42,11 @@ public class CreateNodesFromJsonTest {
         CreateNodesFromJson testClass = new CreateNodesFromJson();
         try (Transaction tx = neo4j.defaultDatabaseService().beginTx()) {
 
+            NullLog log = NullLog.getInstance();
+
             Util.Outgoing expected = new Util.Outgoing(7, 11, 51);
-            Util.Outgoing actual = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx);
-            Util.Outgoing duplicate = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx);
+            Util.Outgoing actual = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx, log);
+            Util.Outgoing duplicate = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx, log);
 
             assertEquals("The outgoing should be all 0s because its a duplicate", 0, duplicate.nodesCreated);
             assertEquals("The outgoing should match the expected nodes created", expected.nodesCreated, actual.nodesCreated);
@@ -62,9 +64,11 @@ public class CreateNodesFromJsonTest {
         CreateNodesFromJson testClass = new CreateNodesFromJson();
         try (Transaction tx = neo4j.defaultDatabaseService().beginTx()) {
 
+            NullLog log = NullLog.getInstance();
+
             Util.Outgoing expected = new Util.Outgoing(3, 3, 12);
-            Util.Outgoing actual = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx);
-            Util.Outgoing duplicate = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx);
+            Util.Outgoing actual = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx, log);
+            Util.Outgoing duplicate = testClass.handleCreateEntityNodesFromJson(testEntitiesJson, tx, log);
 
             assertEquals("The outgoing should be all 0s because its a duplicate", 0, duplicate.nodesCreated);
             assertEquals("The outgoing should match the expected nodes created", expected.nodesCreated, actual.nodesCreated);

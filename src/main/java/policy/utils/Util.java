@@ -1,6 +1,11 @@
 package policy.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.neo4j.logging.Log;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -42,6 +47,23 @@ public class Util {
             return Iterables.asArray(first.getClass(), it);
         }
         return value;
+    }
+
+    public static Relationship createNonDuplicateRelationship(Node fromNode, Node toNode, RelationshipType type, Log log) {
+        log.debug(String.format("Creating relationship from node %d to node %d", fromNode.getId(), toNode.getId()));
+        log.debug("fromNode relationships:");
+
+        for (Relationship relationship : fromNode.getRelationships(Direction.OUTGOING, type)) {
+            Node endNode = relationship.getEndNode();
+            log.debug(String.format("\tEnd node: %d", endNode.getId()));
+            if (endNode.getId() == toNode.getId()) {
+                log.debug("\tRelationship between these nodes already exists, returning null");
+                return null;
+            }
+        }
+
+        log.debug("Creating relationship");
+        return fromNode.createRelationshipTo(toNode, type);
     }
 
     public static class Outgoing {
