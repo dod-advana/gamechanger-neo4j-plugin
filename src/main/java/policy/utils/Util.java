@@ -8,8 +8,6 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.internal.helpers.collection.Iterables;
 
 import java.util.*;

@@ -224,9 +224,9 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-                    if (Util.createNonDuplicateRelationship(node, relatedNode, RelationshipType.withName("CHILD_OF"), log) != null)
+                    if (Util.createNonDuplicateRelationship(node, relatedNode, RelationshipType.withName("RELATED_TO"), log) != null)
                         relationshipsCreated++;
-                    if (Util.createNonDuplicateRelationship(relatedNode, node, RelationshipType.withName("CHILD_OF"), log) != null)
+                    if (Util.createNonDuplicateRelationship(relatedNode, node, RelationshipType.withName("RELATED_TO"), log) != null)
                         relationshipsCreated++;
                 }
             }
@@ -297,7 +297,7 @@ public class CreateNodesFromJson {
                 containsRel.setProperty("count", mentionsCount);
                 relationshipsCreated++;
                 propertiesSet++;
-            }            
+            }
         }
 
         return Map.ofEntries(
