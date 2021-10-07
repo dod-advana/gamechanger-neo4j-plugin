@@ -1,8 +1,6 @@
 package policy.ingest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.neo4j.graphdb.*;
-import org.neo4j.internal.helpers.collection.Iterators;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;
 import policy.utils.Util;
@@ -13,11 +11,12 @@ import java.util.stream.Stream;
 
 import static java.util.Map.entry;
 import static java.util.Objects.isNull;
-import static policy.utils.JsonUtils.getStringListFromJsonArray;
-import static policy.utils.JsonUtils.loadJson;
-import static policy.utils.Util.setProperty;
 
 public class CreateUnknownDocsAndReferences {
+
+    private final static String nodesCreatedString = "nodesCreated";
+    private final static String propertiesSetString = "propertiesSet";
+    private final static String relationshipsCreatedString = "relationshipsCreated";
 
     // This gives us a log instance that outputs messages to the
     // standard log, normally found under `data/log/console.log`
@@ -79,10 +78,10 @@ public class CreateUnknownDocsAndReferences {
 
             // Based on the map, empty lists mean no documents for that reference so create a UNKN_Document Node
             // also create relationships
-            Map<String, Integer> uknDocsAndRefsOutput = createUnknownDocsAndReferences(refMap, mapDocsToReferences, tx, log);
-            nodesCreated += uknDocsAndRefsOutput.get("nodesCreated");
-            propertiesSet += uknDocsAndRefsOutput.get("propertiesSet");
-            relationshipsCreated += uknDocsAndRefsOutput.get("relationshipsCreated");
+            Map<String, Integer> uknDocsAndRefsOutput = createReferences(refMap, mapDocsToReferences, tx, log);
+            nodesCreated += uknDocsAndRefsOutput.get(nodesCreatedString);
+            propertiesSet += uknDocsAndRefsOutput.get(propertiesSetString);
+            relationshipsCreated += uknDocsAndRefsOutput.get(relationshipsCreatedString);
 
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
@@ -90,53 +89,97 @@ public class CreateUnknownDocsAndReferences {
         }
     }
 
-    private Map<String, Integer> createUnknownDocsAndReferences(Map<String, List<Node>> refMap, Map<Node, List<String>> mapDocsToReferences, Transaction tx, Log log) {
+    private Map<String, Integer> createReferences(Map<String, List<Node>> refMap, Map<Node, List<String>> mapDocsToReferences, Transaction tx, Log log) {
         int nodesCreated = 0;
         int propertiesSet = 0;
         int relationshipsCreated = 0;
 
-        // Loop through doc nodes and create references to the nodes in the refMap, if no nodes exist then create a UKN_Document
-        for(Node docNode : mapDocsToReferences.keySet()) {
-            int tmpNodesCreated = 0;
-            int tmpPropertiesSet = 0;
-            int tmpRelationshipsCreated = 0;
-            for (String ref : (String[]) docNode.getProperty("ref_list")) {
-                List<Node> refNodes = refMap.get(ref);
-                if (refNodes.isEmpty()) {
-                    Node newUKNNode = tx.createNode(Label.label("UKN_Document"));
-                    tmpNodesCreated++;
-                    newUKNNode.setProperty("doc_id", "UKN Document: " + ref);
-                    newUKNNode.setProperty("ref_name", ref);
-                    tmpPropertiesSet += 2;
-                    docNode.createRelationshipTo(newUKNNode, RelationshipType.withName("REFERENCES_UKN"));
-                    tmpRelationshipsCreated++;
-                } else {
-                    for (Node refDoc : refNodes) {
-                        docNode.createRelationshipTo(refDoc, RelationshipType.withName("REFERENCES"));
-                        tmpRelationshipsCreated++;
+        try {
+            // Loop through doc nodes and create references to the nodes in the refMap, if no nodes exist then create a UKN_Document
+            for (Node docNode : mapDocsToReferences.keySet()) {
+                int tmpNodesCreated = 0;
+                int tmpPropertiesSet = 0;
+                int tmpRelationshipsCreated = 0;
+                for (String ref : (String[]) docNode.getProperty("ref_list")) {
+                    List<Node> refNodes = refMap.get(ref);
+                    Map<String, Integer> tmpCounts;
+                    if (refNodes.isEmpty()) {
+                        tmpCounts = createUKNDocsAndReferences(ref, docNode, tx);
+                    } else {
+                        tmpCounts = createKnownDocReferences(refNodes, docNode);
                     }
+                    tmpNodesCreated += tmpCounts.get(nodesCreatedString);
+                    tmpPropertiesSet += tmpCounts.get(propertiesSetString);
+                    tmpRelationshipsCreated += tmpCounts.get(relationshipsCreatedString);
                 }
+                nodesCreated += tmpNodesCreated;
+                propertiesSet += tmpPropertiesSet;
+                relationshipsCreated += tmpRelationshipsCreated;
             }
-            log.info(String.format("%d nodes created, %d relationships created, %d properties set for: %s", tmpNodesCreated, tmpRelationshipsCreated, tmpPropertiesSet, docNode.getProperty("doc_id")));
-            nodesCreated += tmpNodesCreated;
-            propertiesSet += tmpPropertiesSet;
-            relationshipsCreated += tmpRelationshipsCreated;
+        } catch (Exception e) {
+            log.error(e.toString());
         }
-
         return Map.ofEntries(
-                entry("nodesCreated", nodesCreated),
-                entry("propertiesSet", propertiesSet),
-                entry("relationshipsCreated", relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
-    private int setProperties(Node node, Map<String, Object> properties)  {
-        if (node == null) return 0;
-        int propsSet = 0;
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            setProperty(node, entry.getKey(), entry.getValue());
-            propsSet++;
+    private Map<String, Integer> createUKNDocsAndReferences(String ref, Node docNode, Transaction tx) {
+        int nodesCreated = 0;
+        int propertiesSet = 0;
+        int relationshipsCreated = 0;
+
+        String uknDocLabel = "UKN Document: ";
+        String docIdLabel = "doc_id";
+
+        try {
+            Node node = tx.findNode(Label.label("UKN_Document"), docIdLabel, uknDocLabel + ref);
+            if (isNull(node)) {
+                node = tx.createNode(Util.labels(Collections.singletonList("UKN_Document")));
+                node.setProperty(docIdLabel, uknDocLabel + ref);
+                propertiesSet++;
+                nodesCreated++;
+            }
+            String docType = ref.split(" ")[0].trim();
+            String docNum = ref.replaceFirst(docType, "").trim();
+            node.setProperty("ref_name", ref);
+            node.setProperty("type", "ukn_document");
+            node.setProperty("name", uknDocLabel + ref);
+            node.setProperty("title", uknDocLabel + ref);
+            node.setProperty("doc_type", docType);
+            node.setProperty("doc_num", docNum);
+            propertiesSet += 6;
+            if (Util.createNonDuplicateRelationship(docNode, node, RelationshipType.withName("REFERENCES_UKN"), log) != null)
+                relationshipsCreated++;
+        } catch (Exception e) {
+            log.error(e.toString());
         }
-        return propsSet;
+        return Map.ofEntries(
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
+        );
+    }
+
+    private Map<String, Integer> createKnownDocReferences(List<Node> refNodes, Node docNode) {
+        int nodesCreated = 0;
+        int propertiesSet = 0;
+        int relationshipsCreated = 0;
+
+        try {
+            for (Node refDoc : refNodes) {
+                if (Util.createNonDuplicateRelationship(docNode, refDoc, RelationshipType.withName("REFERENCES"), log) != null)
+                    relationshipsCreated++;
+            }
+        } catch (Exception e) {
+            log.error(e.toString());
+        }
+        return Map.ofEntries(
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
+        );
     }
 }

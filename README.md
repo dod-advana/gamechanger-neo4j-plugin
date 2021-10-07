@@ -26,6 +26,21 @@ See LICENSE.md (including licensing intent - INTENT.md) and CONTRIBUTING.md
 ## Description
 This repo contains the source code needed to build a java based plugin for neo4j. This allows for more efficient data ingest into the graph database.
 
+## How to Build JAR
+If you have Javac and Maven installed:
+```
+mvn clean package
+```
+
+Or using Docker:
+```
+# Linux/Mac
+docker run -it --rm -v "$(pwd)":/usr/src/gc -w /usr/src/gc maven:3.8-jdk-11 mvn clean package
+
+# Windows
+docker run -it --rm -v "%CD%":/usr/src/gc -w /usr/src/gc maven:3.8-jdk-11 mvn clean package
+```
+The jar should be built at: `target/gamechanger-plugin-x.x-SNAPSHOT.jar`
 ## How to Setup Local Env for Development
 
 TODO
