@@ -15,6 +15,9 @@ import static policy.utils.JsonUtils.getStringListFromJsonArray;
 import static policy.utils.JsonUtils.loadJson;
 import static policy.utils.Util.setProperty;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 public class CreateNodesFromJson {
 
     private final static String nodesCreatedString = "nodesCreated";
@@ -38,7 +41,7 @@ public class CreateNodesFromJson {
     public Stream<Util.Outgoing> createDocumentNodesFromJson(@Name("json") String json) {
         try (Transaction tx = db.beginTx())
         {
-            Util.Outgoing out = handleCreateDocumentNodesFromJson(json, tx);
+            Util.Outgoing out = handleCreateDocumentNodesFromJson(json, tx, log);
             tx.commit();
             return Stream.of(out);
         } catch (Exception e) {
@@ -56,7 +59,7 @@ public class CreateNodesFromJson {
     public Stream<Util.Outgoing> createEntityNodesFromJson(@Name("json") String json) {
         try (Transaction tx = db.beginTx())
         {
-            Util.Outgoing out = handleCreateEntityNodesFromJson(json, tx);
+            Util.Outgoing out = handleCreateEntityNodesFromJson(json, tx, log);
             tx.commit();
             return Stream.of(out);
         } catch (Exception e) {
@@ -64,7 +67,7 @@ public class CreateNodesFromJson {
         }
     }
 
-    public Util.Outgoing handleCreateDocumentNodesFromJson(String json, Transaction tx) {
+    public Util.Outgoing handleCreateDocumentNodesFromJson(String json, Transaction tx, Log log) {
         try {
             int nodesCreated = 0;
             int propertiesSet = 0;
@@ -93,14 +96,14 @@ public class CreateNodesFromJson {
                 topicStrings.add(jsonField.getKey());
                 topics.put(jsonField.getKey(), jsonField.getValue().floatValue());
             }
-            Map<String, Integer> topicsOutput = createTopicNodesAndRelationships(node, topics, tx);
+            Map<String, Integer> topicsOutput = createTopicNodesAndRelationships(node, topics, tx, log);
             nodesCreated += topicsOutput.get(nodesCreatedString);
             propertiesSet += topicsOutput.get(propertiesSetString);
             relationshipsCreated += topicsOutput.get(relationshipsCreatedString);
 
             // Entities Object
             JsonNode entitiesNode = jsonNode.get("entities");
-            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiesNode, tx);
+            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiesNode, tx, log);
             nodesCreated += entitiesOutput.get(nodesCreatedString);
             propertiesSet += entitiesOutput.get(propertiesSetString);
             relationshipsCreated += entitiesOutput.get(relationshipsCreatedString);
@@ -159,11 +162,16 @@ public class CreateNodesFromJson {
 
             return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
         } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            log.error(String.format("Error parsing json: %s", sStackTrace));
             throw new RuntimeException("Can't parse json", e);
         }
     }
 
-    public Util.Outgoing handleCreateEntityNodesFromJson(String json, Transaction tx) {
+    public Util.Outgoing handleCreateEntityNodesFromJson(String json, Transaction tx, Log log) {
         try {
             int nodesCreated = 0;
             int propertiesSet = 0;
@@ -203,11 +211,9 @@ public class CreateNodesFromJson {
                     nodesCreated++;
                     propertiesSet++;
                 }
-
-                if(!isNull(node)) {
-                    node.createRelationshipTo(parentNode, RelationshipType.withName("CHILD_OF"));
+                
+                if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                     relationshipsCreated++;
-                }
 
                 String[] relatedEntities = entityNode.get("Related_Agency").asText("").split(";");
                 for (final String relatedEntity : relatedEntities) {
@@ -218,9 +224,10 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-                    node.createRelationshipTo(relatedNode, RelationshipType.withName("RELATED_TO"));
-                    relatedNode.createRelationshipTo(node, RelationshipType.withName("RELATED_TO"));
-                    relationshipsCreated += 2;
+                    if (Util.createNonDuplicateRelationship(node, relatedNode, RelationshipType.withName("RELATED_TO"), log) != null)
+                        relationshipsCreated++;
+                    if (Util.createNonDuplicateRelationship(relatedNode, node, RelationshipType.withName("RELATED_TO"), log) != null)
+                        relationshipsCreated++;
                 }
             }
 
@@ -230,7 +237,7 @@ public class CreateNodesFromJson {
         }
     }
 
-    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Float> topicsMap, Transaction tx) {
+    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Float> topicsMap, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
@@ -243,19 +250,15 @@ public class CreateNodesFromJson {
                 nodesCreated++;
                 propertiesSet++;
             }
-            Iterable<Relationship> relationships = documentNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("CONTAINS"));
-            boolean hasRelationship = false;
-            for (Relationship rel : relationships) {
-                if (rel.getEndNode().getProperty("name") == key) {
-                    hasRelationship = true;
-                }
-            }
-            if (!hasRelationship) {
-                Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("CONTAINS"));
+
+            Relationship containsRel = Util.createNonDuplicateRelationship(documentNode, tmp, RelationshipType.withName("CONTAINS"), log);
+            if (containsRel != null) {
                 containsRel.setProperty("relevancy", topicsMap.get(key));
                 relationshipsCreated++;
                 propertiesSet++;
-                Relationship isInRel = tmp.createRelationshipTo(documentNode, RelationshipType.withName("IS_IN"));
+            }            
+            Relationship isInRel = Util.createNonDuplicateRelationship(tmp, documentNode, RelationshipType.withName("IS_IN"), log);
+            if (isInRel != null) {
                 isInRel.setProperty("relevancy", topicsMap.get(key));
                 relationshipsCreated++;
                 propertiesSet++;
@@ -268,7 +271,7 @@ public class CreateNodesFromJson {
         );
     }
 
-    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, Transaction tx) {
+    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
@@ -288,15 +291,9 @@ public class CreateNodesFromJson {
                 nodesCreated++;
                 propertiesSet++;
             }
-            Iterable<Relationship> relationships = documentNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("MENTIONS"));
-            boolean hasRelationship = false;
-            for (Relationship rel : relationships) {
-                if (rel.getEndNode().getProperty("name") == key) {
-                    hasRelationship = true;
-                }
-            }
-            if (!hasRelationship) {
-                Relationship containsRel = documentNode.createRelationshipTo(tmp, RelationshipType.withName("MENTIONS"));
+
+            Relationship containsRel = Util.createNonDuplicateRelationship(documentNode, tmp, RelationshipType.withName("MENTIONS"), log);
+            if (containsRel != null) {
                 containsRel.setProperty("count", mentionsCount);
                 relationshipsCreated++;
                 propertiesSet++;

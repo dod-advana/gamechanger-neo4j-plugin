@@ -151,17 +151,8 @@ public class CreateUnknownDocsAndReferences {
             node.setProperty("doc_type", docType);
             node.setProperty("doc_num", docNum);
             propertiesSet += 6;
-            Iterable<Relationship> relationships = docNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("REFERENCES_UKN"));
-            boolean hasRelationship = false;
-            for (Relationship rel : relationships) {
-                if (rel.getEndNode().getProperty(docIdLabel) == node.getProperty(docIdLabel)) {
-                    hasRelationship = true;
-                }
-            }
-            if (!hasRelationship) {
-                docNode.createRelationshipTo(node, RelationshipType.withName("REFERENCES_UKN"));
+            if (Util.createNonDuplicateRelationship(docNode, node, RelationshipType.withName("REFERENCES_UKN"), log) != null)
                 relationshipsCreated++;
-            }
         } catch (Exception e) {
             log.error(e.toString());
         }
@@ -177,21 +168,10 @@ public class CreateUnknownDocsAndReferences {
         int propertiesSet = 0;
         int relationshipsCreated = 0;
 
-        String docIdLabel = "doc_id";
-
         try {
             for (Node refDoc : refNodes) {
-                Iterable<Relationship> relationships = docNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("REFERENCES"));
-                boolean hasRelationship = false;
-                for (Relationship rel : relationships) {
-                    if (rel.getEndNode().getProperty(docIdLabel) == refDoc.getProperty(docIdLabel)) {
-                        hasRelationship = true;
-                    }
-                }
-                if (!hasRelationship) {
-                    docNode.createRelationshipTo(refDoc, RelationshipType.withName("REFERENCES"));
+                if (Util.createNonDuplicateRelationship(docNode, refDoc, RelationshipType.withName("REFERENCES"), log) != null)
                     relationshipsCreated++;
-                }
             }
         } catch (Exception e) {
             log.error(e.toString());
