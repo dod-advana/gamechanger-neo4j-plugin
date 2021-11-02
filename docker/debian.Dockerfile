@@ -14,7 +14,7 @@ WORKDIR /build-src/
 RUN \
   mvn clean package \
   && mkdir /build-out \
-  && find /build/src/target/ -type f -name "gamechanger-plugin-*.jar" -exec cp {} /build-out/ \;
+  && find /build-src/target/ -type f -name "gamechanger-plugin-*.jar" -exec cp {} /build-out/ \;
 
 
 ARG BASE_NEO4J_IMAGE=neo4j:4.2.3
