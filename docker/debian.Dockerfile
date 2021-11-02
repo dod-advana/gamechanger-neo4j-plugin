@@ -1,6 +1,11 @@
-ARG BASE_BUILDER_IMAGE=centos:8.4.2105 AS builder
-FROM --platform=x86_64 "${BASE_BUILDER_IMAGE}"
+ARG BASE_BUILDER_IMAGE=centos:8.4.2105
+ARG BASE_NEO4J_IMAGE=neo4j:4.2.3
 
+#####
+## ## BUILDER IMAGE
+#####
+
+FROM --platform=x86_64 "${BASE_BUILDER_IMAGE}" AS builder
 USER root
 
 RUN yum install -y https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.rpm
@@ -16,8 +21,10 @@ RUN \
   && mkdir /build-out \
   && find /build-src/target/ -type f -name "gamechanger-plugin-*.jar" -exec cp {} /build-out/ \;
 
+#####
+## ## MAIN IMAGE
+#####
 
-ARG BASE_NEO4J_IMAGE=neo4j:4.2.3
 FROM --platform=x86_64 "${BASE_NEO4J_IMAGE}"
 
 ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*"
