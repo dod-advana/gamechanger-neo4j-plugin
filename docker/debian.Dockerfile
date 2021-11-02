@@ -18,7 +18,7 @@ RUN \
 
 
 ARG BASE_NEO4J_IMAGE=neo4j:4.2.3
-FROM --platform=x86_64 "${BASE_IMAGE}"
+FROM --platform=x86_64 "${BASE_NEO4J_IMAGE}"
 
 ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*"
 ENV NEO4J_dbms_security_procedures_whitelist="gds.*,apoc.*"
