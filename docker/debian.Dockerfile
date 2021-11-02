@@ -1,4 +1,4 @@
-ARG BASE_BUILDER_IMAGE=centos8.4.2105 AS builder
+ARG BASE_BUILDER_IMAGE=centos:8.4.2105 AS builder
 FROM --platform=x86_64 "${BASE_BUILDER_IMAGE}"
 
 USER root
