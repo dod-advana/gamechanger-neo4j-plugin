@@ -25,6 +25,8 @@ RUN \
 ## ## MAIN IMAGE
 #####
 
+USER neo4j
+
 FROM --platform=x86_64 "${BASE_NEO4J_IMAGE}"
 
 ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*"
