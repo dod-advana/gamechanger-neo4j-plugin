@@ -29,8 +29,8 @@ FROM --platform=x86_64 "${BASE_NEO4J_IMAGE}"
 
 USER neo4j
 
-ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*"
-ENV NEO4J_dbms_security_procedures_whitelist="gds.*,apoc.*"
+ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*,policy.*"
+ENV NEO4J_dbms_security_procedures_whitelist="gds.*,apoc.*,policy.*"
 ENV NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
 
 # install custom config
