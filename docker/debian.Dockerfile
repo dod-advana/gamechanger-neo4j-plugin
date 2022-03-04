@@ -1,4 +1,4 @@
-ARG BASE_BUILDER_IMAGE=centos:8.4.2105
+ARG BASE_BUILDER_IMAGE=registry.access.redhat.com/ubi8/ubi:8.4-213
 ARG BASE_NEO4J_IMAGE=neo4j:4.2.3
 
 #####
