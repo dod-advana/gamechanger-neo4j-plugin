@@ -67,6 +67,42 @@ public class CreateNodesFromJson {
         }
     }
 
+    /**
+     * This procedure takes in a json string with all the organizations to populate neo4j in one call
+     * @param json The json string of the orgs to be ingested
+     * @return Stream
+     */
+    @Procedure(value = "policy.createOrgNodesFromJson", mode = Mode.WRITE)
+    @Description("Takes in the org json and creates the nodes and relationships based on the content.")
+    public Stream<Util.Outgoing> createOrgNodesFromJson(@Name("json") String json) {
+        try (Transaction tx = db.beginTx())
+        {
+            Util.Outgoing out = handleCreateOrgNodesFromJson(json, tx, log);
+            tx.commit();
+            return Stream.of(out);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating org node from json", e);
+        }
+    }
+
+    /**
+     * This procedure takes in a json string with all the roles to populate neo4j in one call
+     * @param json The json string of the roles to be ingested
+     * @return Stream
+     */
+    @Procedure(value = "policy.createRoleNodesFromJson", mode = Mode.WRITE)
+    @Description("Takes in the role json and creates the nodes and relationships based on the content.")
+    public Stream<Util.Outgoing> createRoleNodesFromJson(@Name("json") String json) {
+        try (Transaction tx = db.beginTx())
+        {
+            Util.Outgoing out = handleCreateRoleNodesFromJson(json, tx, log);
+            tx.commit();
+            return Stream.of(out);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating role node from json", e);
+        }
+    }
+
     public Util.Outgoing handleCreateDocumentNodesFromJson(String json, Transaction tx, Log log) {
         try {
             int nodesCreated = 0;
@@ -305,6 +341,190 @@ public class CreateNodesFromJson {
             entry(propertiesSetString, propertiesSet),
             entry(relationshipsCreatedString, relationshipsCreated)
         );
+    }
+
+    public Util.Outgoing handleCreateOrgNodesFromJson(String json, Transaction tx, Log log) {
+        try {
+            int nodesCreated = 0;
+            int propertiesSet = 0;
+            int relationshipsCreated = 0;
+
+            JsonNode jsonNode = loadJson(json, true);
+
+            for (final JsonNode orgNode : jsonNode) {
+                String orgName = orgNode.get("Name").asText("");
+                String orgParentName = orgNode.get("Parent").asText("");
+                String orgType = orgNode.get("Type").asText("");
+                String orgSubtype = orgNode.get("Subtype").asText("");
+                String orgHead = orgNode.get("Head").asText("");
+
+                Node node = tx.findNode(Label.label("Org"), "name", orgName);
+                if (isNull(node)) {
+                    node = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                    nodesCreated++;
+                }
+
+                Map<String, Object> properties = Map.ofEntries(
+                    entry("name", orgName),
+                    // entry("aliases", orgNode.get("Aliases").asText("")),
+                    entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
+                    entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
+                    entry("type", "organization")
+                );
+
+                propertiesSet += setProperties(node, properties);
+
+                if (!orgParentName.isEmpty()) {
+                    Node parentNode = tx.findNode(Label.label("Org"), "name", orgParentName);
+                    if (isNull(parentNode)) {
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        parentNode.setProperty("name", orgParentName);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+                
+                // Type
+                if (!orgType.isEmpty()) {
+                    Node typeNode = tx.findNode(Label.label("Org"), "name", orgType);
+                    if (isNull(typeNode)) {
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        typeNode.setProperty("name", orgType);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+
+                // Subtype
+                if (!orgSubtype.isEmpty()) {
+                    Node subtypeNode = tx.findNode(Label.label("Org"), "name", orgSubtype);
+                    if (isNull(subtypeNode)) {
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        subtypeNode.setProperty("name", orgSubtype);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+
+                // Head
+                if (!orgHead.isEmpty()) {
+                    Node headNode = tx.findNode(Label.label("Role"), "name", orgHead);
+                    if (isNull(headNode)) {
+                        headNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        headNode.setProperty("name", orgHead);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, headNode, RelationshipType.withName("HAS_HEAD"), log) != null)
+                        relationshipsCreated++;
+                }
+            }
+            return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't parse Orgs json", e);
+        }
+    }
+
+    public Util.Outgoing handleCreateRoleNodesFromJson(String json, Transaction tx, Log log) {
+        try {
+            int nodesCreated = 0;
+            int propertiesSet = 0;
+            int relationshipsCreated = 0;
+
+            JsonNode jsonNode = loadJson(json, true);
+
+            for (final JsonNode roleNode : jsonNode) {
+                String roleName = roleNode.get("Name").asText("");
+                String roleParentName = roleNode.get("Parent").asText("");
+                String roleOrgParentName = roleNode.get("OrgParent").asText("");
+                String roleType = roleNode.get("Type").asText("");
+                String roleSubtype = roleNode.get("Subtype").asText("");
+
+                Node node = tx.findNode(Label.label("Role"), "name", orgName);
+                if (isNull(node)) {
+                    node = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                    nodesCreated++;
+                }
+
+                Map<String, Object> properties = Map.ofEntries(
+                    entry("name", roleName),
+                    // entry("aliases", roleNode.get("Aliases").asText("")),
+                    entry("type", "role")
+                );
+
+                propertiesSet += setProperties(node, properties);
+
+                // parent
+                if (!roleParentName.isEmpty()) {
+                    Node parentNode = tx.findNode(Label.label("Role"), "name", roleParentName);
+                    if (isNull(parentNode)) {
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        parentNode.setProperty("name", roleParentName);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+                
+                // orgParent
+                if (!roleOrgParentName.isEmpty()) {
+                    Node orgParentNode = tx.findNode(Label.label("Org"), "name", roleOrgParentName);
+                    if (isNull(orgParentNode)) {
+                        orgParentNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        orgParentNode.setProperty("name", roleOrgParentName);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) != null)
+                        relationshipsCreated++;
+                }
+                
+
+                // Type
+                if (!roleType.isEmpty()) {
+                    Node typeNode = tx.findNode(Label.label("Role"), "name", roleType);
+                    if (isNull(typeNode)) {
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        typeNode.setProperty("name", roleType);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+
+                // Subtype
+                if (!roleSubtype.isEmpty()) {
+                    Node subtypeNode = tx.findNode(Label.label("Role"), "name", roleSubtype);
+                    if (isNull(subtypeNode)) {
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        subtypeNode.setProperty("name", roleSubtype);
+                        nodesCreated++;
+                        propertiesSet++;
+                    }
+    
+                    if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
+                        relationshipsCreated++;
+                }
+            }
+            return new Util.Outgoing(nodesCreated, relationshipsCreated, propertiesSet);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't parse Roles json", e);
+        }
     }
 
     private int setProperties(Node node, Map<String, Object> properties)  {
