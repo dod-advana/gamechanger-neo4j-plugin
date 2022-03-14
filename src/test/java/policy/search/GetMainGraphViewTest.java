@@ -51,7 +51,7 @@ public class GetMainGraphViewTest {
         try(Session session = driver.session()) {
             List<String> docIds = asList("AGO 1976-02.pdf_0", "Test 1.pdf_0");
 
-            Record record = session.run("CALL policy.getMainGraphView($docIds) YIELD nodes, relationships RETURN nodes, relationships", Util.map("docIds", docIds)).single();
+            org.neo4j.driver.Record record = session.run("CALL policy.getMainGraphView($docIds) YIELD nodes, relationships RETURN nodes, relationships", Util.map("docIds", docIds)).single();
 
             assertEquals("The outgoing should match the expected nodes found", 4, record.get("nodes").asList().size());
             assertEquals("The outgoing should match the expected relationships found", 4, record.get("relationships").asList().size());

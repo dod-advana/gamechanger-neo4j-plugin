@@ -137,12 +137,19 @@ public class CreateNodesFromJson {
             propertiesSet += topicsOutput.get(propertiesSetString);
             relationshipsCreated += topicsOutput.get(relationshipsCreatedString);
 
-            // Entities Object
-            JsonNode entitiesNode = jsonNode.get("entities");
-            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiesNode, tx, log);
-            nodesCreated += entitiesOutput.get(nodesCreatedString);
-            propertiesSet += entitiesOutput.get(propertiesSetString);
-            relationshipsCreated += entitiesOutput.get(relationshipsCreatedString);
+            // Org Objects
+            JsonNode orgNode = jsonNode.get("orgs");
+            Map<String, Integer> orgsOutput = createEntityNodesAndRelationships(node, orgNode, "Org", tx, log);
+            nodesCreated += orgsOutput.get(nodesCreatedString);
+            propertiesSet += orgsOutput.get(propertiesSetString);
+            relationshipsCreated += orgsOutput.get(relationshipsCreatedString);
+
+            // Role Objects
+            JsonNode roleNode = jsonNode.get("roles");
+            Map<String, Integer> rolesOutput = createEntityNodesAndRelationships(node, roleNode, "Role", tx, log);
+            nodesCreated += rolesOutput.get(nodesCreatedString);
+            propertiesSet += rolesOutput.get(propertiesSetString);
+            relationshipsCreated += rolesOutput.get(relationshipsCreatedString);
 
             // Reference info
             String docNum = jsonNode.get("doc_num").asText("");
@@ -207,6 +214,7 @@ public class CreateNodesFromJson {
         }
     }
 
+    // deprecated function to be deleted
     public Util.Outgoing handleCreateEntityNodesFromJson(String json, Transaction tx, Log log) {
         try {
             int nodesCreated = 0;
@@ -307,7 +315,7 @@ public class CreateNodesFromJson {
         );
     }
 
-    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, Transaction tx, Log log) {
+    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, String nodeType, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
@@ -320,9 +328,9 @@ public class CreateNodesFromJson {
             String key = jsonField.getKey();
             Integer mentionsCount = entityCounts.get(key).asInt(0);
 
-            Node tmp = tx.findNode(Label.label("Entity"), "name", key);
+            Node tmp = tx.findNode(Label.label(nodeType), "name", key);
             if (isNull(tmp)) {
-                tmp = tx.createNode(Util.labels(Collections.singletonList("Entity")));
+                tmp = tx.createNode(Util.labels(Collections.singletonList(nodeType)));
                 tmp.setProperty("name", key);
                 nodesCreated++;
                 propertiesSet++;
@@ -366,7 +374,7 @@ public class CreateNodesFromJson {
 
                 Map<String, Object> properties = Map.ofEntries(
                     entry("name", orgName),
-                    // entry("aliases", orgNode.get("Aliases").asText("")),
+                    entry("aliases", orgNode.get("Aliases").asText("")),
                     entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
                     entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
                     entry("type", "organization")
@@ -450,7 +458,7 @@ public class CreateNodesFromJson {
                 String roleType = roleNode.get("Type").asText("");
                 String roleSubtype = roleNode.get("Subtype").asText("");
 
-                Node node = tx.findNode(Label.label("Role"), "name", orgName);
+                Node node = tx.findNode(Label.label("Role"), "name", roleName);
                 if (isNull(node)) {
                     node = tx.createNode(Util.labels(Collections.singletonList("Role")));
                     nodesCreated++;
@@ -458,7 +466,7 @@ public class CreateNodesFromJson {
 
                 Map<String, Object> properties = Map.ofEntries(
                     entry("name", roleName),
-                    // entry("aliases", roleNode.get("Aliases").asText("")),
+                    entry("aliases", roleNode.get("Aliases").asText("")),
                     entry("type", "role")
                 );
 
@@ -486,10 +494,13 @@ public class CreateNodesFromJson {
                         orgParentNode.setProperty("name", roleOrgParentName);
                         nodesCreated++;
                         propertiesSet++;
+                    } 
+                    // Only add "HAS_ROLE" between org/role if the role is not "HEAD" of the org
+                    if (Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) == false) {
+                        if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_ROLE"), log) != null)
+                            relationshipsCreated++;
                     }
-    
-                    if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) != null)
-                        relationshipsCreated++;
+
                 }
                 
 

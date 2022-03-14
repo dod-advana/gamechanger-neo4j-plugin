@@ -51,17 +51,24 @@ public class Util {
         log.debug(String.format("Creating relationship from node %d to node %d", fromNode.getId(), toNode.getId()));
         log.debug("fromNode relationships:");
 
+        if (Util.checkNodeRelationshipExists(fromNode, toNode, type, log)) {
+            return null;
+        } else {
+            log.debug("Creating relationship");
+            return fromNode.createRelationshipTo(toNode, type);
+        }
+    }
+
+    public static boolean checkNodeRelationshipExists(Node fromNode, Node toNode, RelationshipType type, Log log) {
         for (Relationship relationship : fromNode.getRelationships(Direction.OUTGOING, type)) {
             Node endNode = relationship.getEndNode();
             log.debug(String.format("\tEnd node: %d", endNode.getId()));
             if (endNode.getId() == toNode.getId()) {
                 log.debug("\tRelationship between these nodes already exists, returning null");
-                return null;
+                return true;
             }
         }
-
-        log.debug("Creating relationship");
-        return fromNode.createRelationshipTo(toNode, type);
+        return false;
     }
 
     public static class Outgoing {
