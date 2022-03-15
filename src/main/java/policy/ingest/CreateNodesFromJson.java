@@ -121,7 +121,7 @@ public class CreateNodesFromJson {
 
             // Keyw_5 Array
             List<String> keyw_5 = getStringListFromJsonArray(jsonNode.get("keyw_5"));
-
+                
             // Topics Object
             JsonNode topicsNode = jsonNode.get("topics_rs");
             List<String> topicStrings = new ArrayList<>();
@@ -137,19 +137,26 @@ public class CreateNodesFromJson {
             propertiesSet += topicsOutput.get(propertiesSetString);
             relationshipsCreated += topicsOutput.get(relationshipsCreatedString);
 
-            // Org Objects
-            JsonNode orgNode = jsonNode.get("orgs");
-            Map<String, Integer> orgsOutput = createEntityNodesAndRelationships(node, orgNode, "Org", tx, log);
-            nodesCreated += orgsOutput.get(nodesCreatedString);
-            propertiesSet += orgsOutput.get(propertiesSetString);
-            relationshipsCreated += orgsOutput.get(relationshipsCreatedString);
+            // Entity Objects
+            JsonNode entitiyNode = jsonNode.get("entities");
+            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiyNode, "Entity", tx, log);
+            nodesCreated += entitiesOutput.get(nodesCreatedString);
+            propertiesSet += entitiesOutput.get(propertiesSetString);
+            relationshipsCreated += entitiesOutput.get(relationshipsCreatedString);
 
-            // Role Objects
-            JsonNode roleNode = jsonNode.get("roles");
-            Map<String, Integer> rolesOutput = createEntityNodesAndRelationships(node, roleNode, "Role", tx, log);
-            nodesCreated += rolesOutput.get(nodesCreatedString);
-            propertiesSet += rolesOutput.get(propertiesSetString);
-            relationshipsCreated += rolesOutput.get(relationshipsCreatedString);
+            // // Org Objects
+            // JsonNode orgNode = jsonNode.get("orgs");
+            // Map<String, Integer> orgsOutput = createEntityNodesAndRelationships(node, orgNode, "Org", tx, log);
+            // nodesCreated += orgsOutput.get(nodesCreatedString);
+            // propertiesSet += orgsOutput.get(propertiesSetString);
+            // relationshipsCreated += orgsOutput.get(relationshipsCreatedString);
+
+            // // Role Objects
+            // JsonNode roleNode = jsonNode.get("roles");
+            // Map<String, Integer> rolesOutput = createEntityNodesAndRelationships(node, roleNode, "Role", tx, log);
+            // nodesCreated += rolesOutput.get(nodesCreatedString);
+            // propertiesSet += rolesOutput.get(propertiesSetString);
+            // relationshipsCreated += rolesOutput.get(relationshipsCreatedString);
 
             // Reference info
             String docNum = jsonNode.get("doc_num").asText("");
@@ -366,9 +373,9 @@ public class CreateNodesFromJson {
                 String orgSubtype = orgNode.get("Subtype").asText("");
                 String orgHead = orgNode.get("Head").asText("");
 
-                Node node = tx.findNode(Label.label("Org"), "name", orgName);
+                Node node = tx.findNode(Label.label("Entity"), "name", orgName);
                 if (isNull(node)) {
-                    node = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                    node = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     nodesCreated++;
                 }
 
@@ -377,15 +384,15 @@ public class CreateNodesFromJson {
                     entry("aliases", orgNode.get("Aliases").asText("")),
                     entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
                     entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
-                    entry("type", "organization")
+                    entry("type", "org")
                 );
 
                 propertiesSet += setProperties(node, properties);
 
                 if (!orgParentName.isEmpty()) {
-                    Node parentNode = tx.findNode(Label.label("Org"), "name", orgParentName);
+                    Node parentNode = tx.findNode(Label.label("Entity"), "name", orgParentName);
                     if (isNull(parentNode)) {
-                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         parentNode.setProperty("name", orgParentName);
                         nodesCreated++;
                         propertiesSet++;
@@ -397,9 +404,9 @@ public class CreateNodesFromJson {
                 
                 // Type
                 if (!orgType.isEmpty()) {
-                    Node typeNode = tx.findNode(Label.label("Org"), "name", orgType);
+                    Node typeNode = tx.findNode(Label.label("Entity"), "name", orgType);
                     if (isNull(typeNode)) {
-                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         typeNode.setProperty("name", orgType);
                         nodesCreated++;
                         propertiesSet++;
@@ -411,9 +418,9 @@ public class CreateNodesFromJson {
 
                 // Subtype
                 if (!orgSubtype.isEmpty()) {
-                    Node subtypeNode = tx.findNode(Label.label("Org"), "name", orgSubtype);
+                    Node subtypeNode = tx.findNode(Label.label("Entity"), "name", orgSubtype);
                     if (isNull(subtypeNode)) {
-                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         subtypeNode.setProperty("name", orgSubtype);
                         nodesCreated++;
                         propertiesSet++;
@@ -425,9 +432,9 @@ public class CreateNodesFromJson {
 
                 // Head
                 if (!orgHead.isEmpty()) {
-                    Node headNode = tx.findNode(Label.label("Role"), "name", orgHead);
+                    Node headNode = tx.findNode(Label.label("Entity"), "name", orgHead);
                     if (isNull(headNode)) {
-                        headNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        headNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         headNode.setProperty("name", orgHead);
                         nodesCreated++;
                         propertiesSet++;
@@ -458,9 +465,9 @@ public class CreateNodesFromJson {
                 String roleType = roleNode.get("Type").asText("");
                 String roleSubtype = roleNode.get("Subtype").asText("");
 
-                Node node = tx.findNode(Label.label("Role"), "name", roleName);
+                Node node = tx.findNode(Label.label("Entity"), "name", roleName);
                 if (isNull(node)) {
-                    node = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                    node = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     nodesCreated++;
                 }
 
@@ -474,9 +481,9 @@ public class CreateNodesFromJson {
 
                 // parent
                 if (!roleParentName.isEmpty()) {
-                    Node parentNode = tx.findNode(Label.label("Role"), "name", roleParentName);
+                    Node parentNode = tx.findNode(Label.label("Entity"), "name", roleParentName);
                     if (isNull(parentNode)) {
-                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         parentNode.setProperty("name", roleParentName);
                         nodesCreated++;
                         propertiesSet++;
@@ -488,9 +495,9 @@ public class CreateNodesFromJson {
                 
                 // orgParent
                 if (!roleOrgParentName.isEmpty()) {
-                    Node orgParentNode = tx.findNode(Label.label("Org"), "name", roleOrgParentName);
+                    Node orgParentNode = tx.findNode(Label.label("Entity"), "name", roleOrgParentName);
                     if (isNull(orgParentNode)) {
-                        orgParentNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        orgParentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         orgParentNode.setProperty("name", roleOrgParentName);
                         nodesCreated++;
                         propertiesSet++;
@@ -506,9 +513,9 @@ public class CreateNodesFromJson {
 
                 // Type
                 if (!roleType.isEmpty()) {
-                    Node typeNode = tx.findNode(Label.label("Role"), "name", roleType);
+                    Node typeNode = tx.findNode(Label.label("Entity"), "name", roleType);
                     if (isNull(typeNode)) {
-                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         typeNode.setProperty("name", roleType);
                         nodesCreated++;
                         propertiesSet++;
@@ -520,9 +527,9 @@ public class CreateNodesFromJson {
 
                 // Subtype
                 if (!roleSubtype.isEmpty()) {
-                    Node subtypeNode = tx.findNode(Label.label("Role"), "name", roleSubtype);
+                    Node subtypeNode = tx.findNode(Label.label("Entity"), "name", roleSubtype);
                     if (isNull(subtypeNode)) {
-                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         subtypeNode.setProperty("name", roleSubtype);
                         nodesCreated++;
                         propertiesSet++;
