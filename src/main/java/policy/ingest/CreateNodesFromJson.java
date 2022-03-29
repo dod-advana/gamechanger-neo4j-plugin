@@ -384,7 +384,7 @@ public class CreateNodesFromJson {
                     entry("aliases", orgNode.get("Aliases").asText("")),
                     entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
                     entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
-                    entry("type", "org")
+                    entry("type", "organization")
                 );
 
                 propertiesSet += setProperties(node, properties);
