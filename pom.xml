@@ -6,7 +6,7 @@
 
     <groupId>org.gamechanger.policy</groupId>
     <artifactId>gamechanger-plugin</artifactId>
-    <version>1.2.03302022</version>
+    <version>1.2.04052022</version>
 
     <packaging>jar</packaging>
     <name>Neo4j Procedures for the GAMECHANGER Project</name>
