@@ -125,12 +125,14 @@ public class CreateNodesFromJson {
             // Topics Object
             JsonNode topicsNode = jsonNode.get("topics_rs");
             List<String> topicStrings = new ArrayList<>();
-            Map<String, Float> topics = new HashMap<>();
-            Iterator<Map.Entry<String, JsonNode>> topicFields = topicsNode.fields();
+            Map<String, Integer> topics = new HashMap<>();
+            Iterator<JsonNode> topicFields = topicsNode.elements();
+            int i = 0; // Filler node value for node2vec
             while (topicFields.hasNext()) {
-                Map.Entry<String, JsonNode> jsonField = topicFields.next();
-                topicStrings.add(jsonField.getKey());
-                topics.put(jsonField.getKey(), jsonField.getValue().floatValue());
+                JsonNode jsonField = topicFields.next();
+                topicStrings.add(jsonField.asText());
+                topics.put(jsonField.asText(), i);
+                i++;
             }
             Map<String, Integer> topicsOutput = createTopicNodesAndRelationships(node, topics, tx, log);
             nodesCreated += topicsOutput.get(nodesCreatedString);
@@ -288,7 +290,7 @@ public class CreateNodesFromJson {
         }
     }
 
-    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Float> topicsMap, Transaction tx, Log log) {
+    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Integer> topicsMap, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
