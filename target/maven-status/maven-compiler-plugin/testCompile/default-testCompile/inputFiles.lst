@@ -1,0 +1,5 @@
+/usr/src/gc/src/test/java/policy/ingest/CreateNodesFromJsonTest.java
+/usr/src/gc/src/test/java/policy/search/GetMainGraphViewTest.java
+/usr/src/gc/src/test/java/policy/utils/JsonUtilsTest.java
+/usr/src/gc/src/test/java/policy/utils/UtilTest.java
+/usr/src/gc/src/test/java/policy/ingest/CreateUnknownDocsAndReferencesTest.java

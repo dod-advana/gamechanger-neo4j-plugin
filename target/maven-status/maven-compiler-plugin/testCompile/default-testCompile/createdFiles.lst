@@ -1,0 +1,5 @@
+policy/search/GetMainGraphViewTest.class
+policy/utils/UtilTest.class
+policy/ingest/CreateNodesFromJsonTest.class
+policy/ingest/CreateUnknownDocsAndReferencesTest.class
+policy/utils/JsonUtilsTest.class
