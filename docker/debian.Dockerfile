@@ -8,6 +8,22 @@ ARG NEO4J_PLUGIN_IMAGE=registry.lab.boozallencsn.com/docker-mirror/library/neo4j
 FROM --platform=x86_64 "${BASE_BUILDER_IMAGE}" AS builder
 USER root
 
+# ensure RHEL host repos are enabled (undo what's done here https://repo1.dso.mil/dsop/redhat/ubi/ubi8/-/blob/development/Dockerfile#L22)
+RUN sed -i "s/enabled=0/enabled=1/" /etc/dnf/plugins/subscription-manager.conf\
+  && yum update -y \
+  && yum install -y \
+  git \
+  swig \
+  && yum install -y \
+  glib2 \
+  file \
+  wget \
+  python38 \
+  cairo \
+  unzip \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
 RUN yum install -y https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.rpm
 ENV JAVA_HOME=/etc/alternatives/java_sdk
 
