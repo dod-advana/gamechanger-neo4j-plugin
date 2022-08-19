@@ -121,16 +121,18 @@ public class CreateNodesFromJson {
 
             // Keyw_5 Array
             List<String> keyw_5 = getStringListFromJsonArray(jsonNode.get("keyw_5"));
-                
+
             // Topics Object
             JsonNode topicsNode = jsonNode.get("topics_rs");
             List<String> topicStrings = new ArrayList<>();
-            Map<String, Float> topics = new HashMap<>();
-            Iterator<Map.Entry<String, JsonNode>> topicFields = topicsNode.fields();
+            Map<String, Integer> topics = new HashMap<>();
+            Iterator<JsonNode> topicFields = topicsNode.elements();
+            int i = 0; // Filler node value for node2vec
             while (topicFields.hasNext()) {
-                Map.Entry<String, JsonNode> jsonField = topicFields.next();
-                topicStrings.add(jsonField.getKey());
-                topics.put(jsonField.getKey(), jsonField.getValue().floatValue());
+                JsonNode jsonField = topicFields.next();
+                topicStrings.add(jsonField.asText());
+                topics.put(jsonField.asText(), i);
+                i++;
             }
             Map<String, Integer> topicsOutput = createTopicNodesAndRelationships(node, topics, tx, log);
             nodesCreated += topicsOutput.get(nodesCreatedString);
@@ -139,11 +141,34 @@ public class CreateNodesFromJson {
 
             // Entity Objects
             JsonNode entitiyNode = jsonNode.get("entities");
-            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiyNode, tx, log);
+            Map<String, Integer> entitiesOutput = createEntityNodesAndRelationships(node, entitiyNode, "Entity", tx, log);
             nodesCreated += entitiesOutput.get(nodesCreatedString);
             propertiesSet += entitiesOutput.get(propertiesSetString);
             relationshipsCreated += entitiesOutput.get(relationshipsCreatedString);
 
+            // // Org Objects
+            // JsonNode orgNode = jsonNode.get("orgs");
+            // Map<String, Integer> orgsOutput = createEntityNodesAndRelationships(node, orgNode, "Org", tx, log);
+            // nodesCreated += orgsOutput.get(nodesCreatedString);
+            // propertiesSet += orgsOutput.get(propertiesSetString);
+            // relationshipsCreated += orgsOutput.get(relationshipsCreatedString);
+
+            // // Role Objects
+            // JsonNode roleNode = jsonNode.get("roles");
+            // Map<String, Integer> rolesOutput = createEntityNodesAndRelationships(node, roleNode, "Role", tx, log);
+            // nodesCreated += rolesOutput.get(nodesCreatedString);
+            // propertiesSet += rolesOutput.get(propertiesSetString);
+            // relationshipsCreated += rolesOutput.get(relationshipsCreatedString);
+
+
+            // Authority Objects
+             String authorityName = jsonNode.get("display_org_s").asText("");
+             if (!authorityName.equals("")){
+                 Map<String, Integer> authOutput = createAuthNodesAndRelationships(node, authorityName, tx, log);
+                 nodesCreated += authOutput.get(nodesCreatedString);
+                 propertiesSet += authOutput.get(propertiesSetString);
+                 relationshipsCreated += authOutput.get(relationshipsCreatedString);
+             }
             // Reference info
             String docNum = jsonNode.get("doc_num").asText("");
             String docType = jsonNode.get("doc_type").asText("");
@@ -158,40 +183,40 @@ public class CreateNodesFromJson {
             List<String> references = getStringListFromJsonArray(jsonNode.get("ref_list"));
 
             Map<String, Object> properties = Map.ofEntries(
-                entry("doc_id", docId),
-                entry("keyw_5", keyw_5),
-                entry("topics", topicStrings),
-                entry("ref_list", references),
-                entry("filename", jsonNode.get("filename").asText("")),
-                entry("title", jsonNode.get("title").asText().replace("\"", "'")),
-                entry("display_title_s", jsonNode.get("display_title_s").asText("").replace("\"", "'")),
-                entry("display_org_s", jsonNode.get("display_org_s").asText("")),
-                entry("display_doc_type_s", jsonNode.get("display_doc_type_s").asText("")),
-                entry("access_timestamp_dt", jsonNode.get("access_timestamp_dt").asText("")),
-                entry("publication_date_dt", jsonNode.get("publication_date_dt").asText("")),
-                entry("crawler_used_s", jsonNode.get("crawler_used_s").asText("")),
-                entry("source_fqdn_s", jsonNode.get("source_fqdn_s").asText("")),
-                entry("source_page_url_s", jsonNode.get("source_page_url_s").asText("")),
-                entry("download_url_s", jsonNode.get("download_url_s").asText("")),
-                entry("cac_login_required_b", jsonNode.get("cac_login_required_b").asBoolean(false)),
-                entry("doc_num", docNum),
-                entry("doc_type", docType),
-                entry("summary_30", jsonNode.get("summary_30").asText().replace("\"", "'").replace("\\", "/")),
-                entry("type", jsonNode.get("type").asText("")),
-                entry("name", jsonNode.get("filename").asText("").split(".pdf")[0]),
-                entry("ref_name", refName),
-                entry("page_count", jsonNode.get("page_count").asInt(0)),
-                entry("init_date", jsonNode.get("init_date").asText("")),
-                entry("change_date", jsonNode.get("change_date").asText("")),
-                entry("author", jsonNode.get("author").asText("")),
-                entry("signature", jsonNode.get("signature").asText("")),
-                entry("subject", jsonNode.get("subject").asText("")),
-                entry("classification", jsonNode.get("classification").asText("")),
-                entry("group_s", jsonNode.get("group_s").asText("")),
-                entry("pagerank_r", jsonNode.get("pagerank_r").asDouble(0)),
-                entry("kw_doc_score_r", jsonNode.get("kw_doc_score_r").asDouble(0)),
-                entry("version_hash_s", jsonNode.get("version_hash_s").asText("")),
-                entry("is_revoked_b", jsonNode.get("is_revoked_b").asBoolean(false))
+                    entry("doc_id", docId),
+                    entry("keyw_5", keyw_5),
+                    entry("topics", topicStrings),
+                    entry("ref_list", references),
+                    entry("filename", jsonNode.get("filename").asText("")),
+                    entry("title", jsonNode.get("title").asText().replace("\"", "'")),
+                    entry("display_title_s", jsonNode.get("display_title_s").asText("").replace("\"", "'")),
+                    entry("display_org_s", jsonNode.get("display_org_s").asText("")),
+                    entry("display_doc_type_s", jsonNode.get("display_doc_type_s").asText("")),
+                    entry("access_timestamp_dt", jsonNode.get("access_timestamp_dt").asText("")),
+                    entry("publication_date_dt", jsonNode.get("publication_date_dt").asText("")),
+                    entry("crawler_used_s", jsonNode.get("crawler_used_s").asText("")),
+                    entry("source_fqdn_s", jsonNode.get("source_fqdn_s").asText("")),
+                    entry("source_page_url_s", jsonNode.get("source_page_url_s").asText("")),
+                    entry("download_url_s", jsonNode.get("download_url_s").asText("")),
+                    entry("cac_login_required_b", jsonNode.get("cac_login_required_b").asBoolean(false)),
+                    entry("doc_num", docNum),
+                    entry("doc_type", docType),
+                    entry("summary_30", jsonNode.get("summary_30").asText().replace("\"", "'").replace("\\", "/")),
+                    entry("type", jsonNode.get("type").asText("")),
+                    entry("name", jsonNode.get("filename").asText("").split(".pdf")[0]),
+                    entry("ref_name", refName),
+                    entry("page_count", jsonNode.get("page_count").asInt(0)),
+                    entry("init_date", jsonNode.get("init_date").asText("")),
+                    entry("change_date", jsonNode.get("change_date").asText("")),
+                    entry("author", jsonNode.get("author").asText("")),
+                    entry("signature", jsonNode.get("signature").asText("")),
+                    entry("subject", jsonNode.get("subject").asText("")),
+                    entry("classification", jsonNode.get("classification").asText("")),
+                    entry("group_s", jsonNode.get("group_s").asText("")),
+                    entry("pagerank_r", jsonNode.get("pagerank_r").asDouble(0)),
+                    entry("kw_doc_score_r", jsonNode.get("kw_doc_score_r").asDouble(0)),
+                    entry("version_hash_s", jsonNode.get("version_hash_s").asText("")),
+                    entry("is_revoked_b", jsonNode.get("is_revoked_b").asBoolean(false))
             );
 
             propertiesSet += setProperties(node, properties);
@@ -227,16 +252,16 @@ public class CreateNodesFromJson {
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                    entry("name", entityNode.get("Agency_Name").asText("")),
-                    entry("aliases", entityNode.get("Agency_Aliases").asText("")),
-                    entry("website", entityNode.get("Website").asText("")),
-                    entry("image", entityNode.get("Agency_Image").asText("")),
-                    entry("address", entityNode.get("Address").asText("")),
-                    entry("phone", entityNode.get("Phone").asText("")),
-                    entry("tty", entityNode.get("TTY").asText("")),
-                    entry("tollfree", entityNode.get("TollFree").asText("")),
-                    entry("branch", entityNode.get("Government_Branch").asText("")),
-                    entry("type", "organization")
+                        entry("name", entityNode.get("Agency_Name").asText("")),
+                        entry("aliases", entityNode.get("Agency_Aliases").asText("")),
+                        entry("website", entityNode.get("Website").asText("")),
+                        entry("image", entityNode.get("Agency_Image").asText("")),
+                        entry("address", entityNode.get("Address").asText("")),
+                        entry("phone", entityNode.get("Phone").asText("")),
+                        entry("tty", entityNode.get("TTY").asText("")),
+                        entry("tollfree", entityNode.get("TollFree").asText("")),
+                        entry("branch", entityNode.get("Government_Branch").asText("")),
+                        entry("type", "organization")
                 );
 
                 propertiesSet += setProperties(node, properties);
@@ -248,7 +273,7 @@ public class CreateNodesFromJson {
                     nodesCreated++;
                     propertiesSet++;
                 }
-                
+
                 if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                     relationshipsCreated++;
 
@@ -274,7 +299,7 @@ public class CreateNodesFromJson {
         }
     }
 
-    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Float> topicsMap, Transaction tx, Log log) {
+    private Map<String, Integer> createTopicNodesAndRelationships(Node documentNode, Map<String, Integer> topicsMap, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
@@ -293,7 +318,7 @@ public class CreateNodesFromJson {
                 containsRel.setProperty("relevancy", topicsMap.get(key));
                 relationshipsCreated++;
                 propertiesSet++;
-            }            
+            }
             Relationship isInRel = Util.createNonDuplicateRelationship(tmp, documentNode, RelationshipType.withName("IS_IN"), log);
             if (isInRel != null) {
                 isInRel.setProperty("relevancy", topicsMap.get(key));
@@ -302,26 +327,24 @@ public class CreateNodesFromJson {
             }
         }
         return Map.ofEntries(
-            entry(nodesCreatedString, nodesCreated),
-            entry(propertiesSetString, propertiesSet),
-            entry(relationshipsCreatedString, relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
-    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, Transaction tx, Log log) {
+    private Map<String, Integer> createEntityNodesAndRelationships(Node documentNode, JsonNode entitiesNode, String nodeType, Transaction tx, Log log) {
         Integer nodesCreated = 0;
         Integer propertiesSet = 0;
         Integer relationshipsCreated = 0;
 
         JsonNode entityPars = entitiesNode.get("entityPars");
         JsonNode entityCounts = entitiesNode.get("entityCounts");
-        JsonNode entityTypes = entitiesNode.get("entityTypes");
         Iterator<Map.Entry<String, JsonNode>> entityFields = entityPars.fields();
         while (entityFields.hasNext()) {
             Map.Entry<String, JsonNode> jsonField = entityFields.next();
             String key = jsonField.getKey();
             Integer mentionsCount = entityCounts.get(key).asInt(0);
-            String nodeType = entityTypes.get(key).asText("");
 
             Node tmp = tx.findNode(Label.label(nodeType), "name", key);
             if (isNull(tmp)) {
@@ -340,10 +363,42 @@ public class CreateNodesFromJson {
         }
 
         return Map.ofEntries(
-            entry(nodesCreatedString, nodesCreated),
-            entry(propertiesSetString, propertiesSet),
-            entry(relationshipsCreatedString, relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
         );
+    }
+
+    private Map<String, Integer> createAuthNodesAndRelationships(Node documentNode, String authorityName, Transaction tx, Log log) {
+        try {
+            Integer nodesCreated = 0;
+            Integer propertiesSet = 0;
+            Integer relationshipsCreated = 0;
+            if (authorityName.equals("Dept. of Defense")) {
+                authorityName = "United States Department of Defense";
+            }
+
+            Node tmp = tx.findNode(Label.label("Entity"), "name", authorityName);
+            if (isNull(tmp)) {
+                tmp = tx.createNode(Util.labels(Collections.singletonList("Entity")));
+                tmp.setProperty("name", authorityName);
+                nodesCreated++;
+                propertiesSet++;
+            }
+
+            Relationship containsRel = Util.createNonDuplicateRelationship(documentNode, tmp, RelationshipType.withName("DERIVES_AUTHORITY_FROM"), log);
+            if (containsRel != null) {
+                relationshipsCreated++;
+            }
+
+            return Map.ofEntries(
+                    entry(nodesCreatedString, nodesCreated),
+                    entry(propertiesSetString, propertiesSet),
+                    entry(relationshipsCreatedString, relationshipsCreated)
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Can't parse authority node logic", e);
+        }
     }
 
     public Util.Outgoing handleCreateOrgNodesFromJson(String json, Transaction tx, Log log) {
@@ -361,73 +416,73 @@ public class CreateNodesFromJson {
                 String orgSubtype = orgNode.get("Subtype").asText("");
                 String orgHead = orgNode.get("Head").asText("");
 
-                Node node = tx.findNode(Label.label("Org"), "name", orgName);
+                Node node = tx.findNode(Label.label("Entity"), "name", orgName);
                 if (isNull(node)) {
-                    node = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                    node = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     nodesCreated++;
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                    entry("name", orgName),
-                    entry("aliases", orgNode.get("Aliases").asText("")),
-                    entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
-                    entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
-                    entry("type", "organization")
+                        entry("name", orgName),
+                        entry("aliases", orgNode.get("Aliases").asText("")),
+                        entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
+                        entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
+                        entry("type", "organization")
                 );
 
                 propertiesSet += setProperties(node, properties);
 
                 if (!orgParentName.isEmpty()) {
-                    Node parentNode = tx.findNode(Label.label("Org"), "name", orgParentName);
+                    Node parentNode = tx.findNode(Label.label("Entity"), "name", orgParentName);
                     if (isNull(parentNode)) {
-                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         parentNode.setProperty("name", orgParentName);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                         relationshipsCreated++;
                 }
-                
+
                 // Type
                 if (!orgType.isEmpty()) {
-                    Node typeNode = tx.findNode(Label.label("Org"), "name", orgType);
+                    Node typeNode = tx.findNode(Label.label("Entity"), "name", orgType);
                     if (isNull(typeNode)) {
-                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         typeNode.setProperty("name", orgType);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
 
                 // Subtype
                 if (!orgSubtype.isEmpty()) {
-                    Node subtypeNode = tx.findNode(Label.label("Org"), "name", orgSubtype);
+                    Node subtypeNode = tx.findNode(Label.label("Entity"), "name", orgSubtype);
                     if (isNull(subtypeNode)) {
-                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         subtypeNode.setProperty("name", orgSubtype);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
 
                 // Head
                 if (!orgHead.isEmpty()) {
-                    Node headNode = tx.findNode(Label.label("Role"), "name", orgHead);
+                    Node headNode = tx.findNode(Label.label("Entity"), "name", orgHead);
                     if (isNull(headNode)) {
-                        headNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        headNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         headNode.setProperty("name", orgHead);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, headNode, RelationshipType.withName("HAS_HEAD"), log) != null)
                         relationshipsCreated++;
                 }
@@ -453,43 +508,43 @@ public class CreateNodesFromJson {
                 String roleType = roleNode.get("Type").asText("");
                 String roleSubtype = roleNode.get("Subtype").asText("");
 
-                Node node = tx.findNode(Label.label("Role"), "name", roleName);
+                Node node = tx.findNode(Label.label("Entity"), "name", roleName);
                 if (isNull(node)) {
-                    node = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                    node = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     nodesCreated++;
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                    entry("name", roleName),
-                    entry("aliases", roleNode.get("Aliases").asText("")),
-                    entry("type", "role")
+                        entry("name", roleName),
+                        entry("aliases", roleNode.get("Aliases").asText("")),
+                        entry("type", "role")
                 );
 
                 propertiesSet += setProperties(node, properties);
 
                 // parent
                 if (!roleParentName.isEmpty()) {
-                    Node parentNode = tx.findNode(Label.label("Role"), "name", roleParentName);
+                    Node parentNode = tx.findNode(Label.label("Entity"), "name", roleParentName);
                     if (isNull(parentNode)) {
-                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         parentNode.setProperty("name", roleParentName);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                         relationshipsCreated++;
                 }
-                
+
                 // orgParent
                 if (!roleOrgParentName.isEmpty()) {
-                    Node orgParentNode = tx.findNode(Label.label("Org"), "name", roleOrgParentName);
+                    Node orgParentNode = tx.findNode(Label.label("Entity"), "name", roleOrgParentName);
                     if (isNull(orgParentNode)) {
-                        orgParentNode = tx.createNode(Util.labels(Collections.singletonList("Org")));
+                        orgParentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         orgParentNode.setProperty("name", roleOrgParentName);
                         nodesCreated++;
                         propertiesSet++;
-                    } 
+                    }
                     // Only add "HAS_ROLE" between org/role if the role is not "HEAD" of the org
                     if (Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) == false) {
                         if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_ROLE"), log) != null)
@@ -497,32 +552,32 @@ public class CreateNodesFromJson {
                     }
 
                 }
-                
+
 
                 // Type
                 if (!roleType.isEmpty()) {
-                    Node typeNode = tx.findNode(Label.label("Role"), "name", roleType);
+                    Node typeNode = tx.findNode(Label.label("Entity"), "name", roleType);
                     if (isNull(typeNode)) {
-                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        typeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         typeNode.setProperty("name", roleType);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
 
                 // Subtype
                 if (!roleSubtype.isEmpty()) {
-                    Node subtypeNode = tx.findNode(Label.label("Role"), "name", roleSubtype);
+                    Node subtypeNode = tx.findNode(Label.label("Entity"), "name", roleSubtype);
                     if (isNull(subtypeNode)) {
-                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Role")));
+                        subtypeNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                         subtypeNode.setProperty("name", roleSubtype);
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
