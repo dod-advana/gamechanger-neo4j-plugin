@@ -121,7 +121,7 @@ public class CreateNodesFromJson {
 
             // Keyw_5 Array
             List<String> keyw_5 = getStringListFromJsonArray(jsonNode.get("keyw_5"));
-                
+
             // Topics Object
             JsonNode topicsNode = jsonNode.get("topics_rs");
             List<String> topicStrings = new ArrayList<>();
@@ -160,6 +160,15 @@ public class CreateNodesFromJson {
             // propertiesSet += rolesOutput.get(propertiesSetString);
             // relationshipsCreated += rolesOutput.get(relationshipsCreatedString);
 
+
+            // Authority Objects
+             String authorityName = jsonNode.get("display_org_s").asText("");
+             if (!authorityName.equals("")){
+                 Map<String, Integer> authOutput = createAuthNodesAndRelationships(node, authorityName, tx, log);
+                 nodesCreated += authOutput.get(nodesCreatedString);
+                 propertiesSet += authOutput.get(propertiesSetString);
+                 relationshipsCreated += authOutput.get(relationshipsCreatedString);
+             }
             // Reference info
             String docNum = jsonNode.get("doc_num").asText("");
             String docType = jsonNode.get("doc_type").asText("");
@@ -258,13 +267,14 @@ public class CreateNodesFromJson {
                 propertiesSet += setProperties(node, properties);
 
                 Node parentNode = tx.findNode(Label.label("Entity"), "name", parentName);
+
                 if (isNull(parentNode)) {
                     parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     parentNode.setProperty("name", parentName);
                     nodesCreated++;
                     propertiesSet++;
                 }
-                
+
                 if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                     relationshipsCreated++;
 
@@ -309,7 +319,7 @@ public class CreateNodesFromJson {
                 containsRel.setProperty("relevancy", topicsMap.get(key));
                 relationshipsCreated++;
                 propertiesSet++;
-            }            
+            }
             Relationship isInRel = Util.createNonDuplicateRelationship(tmp, documentNode, RelationshipType.withName("IS_IN"), log);
             if (isInRel != null) {
                 isInRel.setProperty("relevancy", topicsMap.get(key));
@@ -360,6 +370,43 @@ public class CreateNodesFromJson {
         );
     }
 
+    private Map<String, Integer> createAuthNodesAndRelationships(Node documentNode, String authorityName, Transaction tx, Log log) {
+        try {
+            Integer nodesCreated = 0;
+            Integer propertiesSet = 0;
+            Integer relationshipsCreated = 0;
+
+            Node tmp = tx.findNode(Label.label("Entity"), "name", authorityName);
+            if (isNull(tmp)) {
+                Result result = tx.execute("MATCH (n:Entity) WHERE '" + authorityName + "' in split(n.aliases,';') RETURN n");
+                while (result.hasNext()) {
+                    Map<String, Object> row = result.next();
+                    tmp = (Node) row.get("n");
+                }
+            }
+
+            if (isNull(tmp)) {
+                tmp = tx.createNode(Util.labels(Collections.singletonList("Entity")));
+                tmp.setProperty("name", authorityName);
+                nodesCreated++;
+                propertiesSet++;
+            }
+
+            Relationship containsRel = Util.createNonDuplicateRelationship(documentNode, tmp, RelationshipType.withName("DERIVES_AUTHORITY_FROM"), log);
+            if (containsRel != null) {
+                relationshipsCreated++;
+            }
+
+            return Map.ofEntries(
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Can't parse authority node logic", e);
+        }
+    }
+
     public Util.Outgoing handleCreateOrgNodesFromJson(String json, Transaction tx, Log log) {
         try {
             int nodesCreated = 0;
@@ -399,11 +446,11 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                         relationshipsCreated++;
                 }
-                
+
                 // Type
                 if (!orgType.isEmpty()) {
                     Node typeNode = tx.findNode(Label.label("Entity"), "name", orgType);
@@ -413,7 +460,7 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
@@ -427,7 +474,7 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
@@ -441,7 +488,7 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, headNode, RelationshipType.withName("HAS_HEAD"), log) != null)
                         relationshipsCreated++;
                 }
@@ -490,11 +537,11 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, parentNode, RelationshipType.withName("CHILD_OF"), log) != null)
                         relationshipsCreated++;
                 }
-                
+
                 // orgParent
                 if (!roleOrgParentName.isEmpty()) {
                     Node orgParentNode = tx.findNode(Label.label("Entity"), "name", roleOrgParentName);
@@ -503,15 +550,15 @@ public class CreateNodesFromJson {
                         orgParentNode.setProperty("name", roleOrgParentName);
                         nodesCreated++;
                         propertiesSet++;
-                    } 
+                    }
                     // Only add "HAS_ROLE" between org/role if the role is not "HEAD" of the org
-                    if (Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) == false) {
+                    if (!Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log)) {
                         if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_ROLE"), log) != null)
                             relationshipsCreated++;
                     }
 
                 }
-                
+
 
                 // Type
                 if (!roleType.isEmpty()) {
@@ -522,7 +569,7 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, typeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }
@@ -536,7 +583,7 @@ public class CreateNodesFromJson {
                         nodesCreated++;
                         propertiesSet++;
                     }
-    
+
                     if (Util.createNonDuplicateRelationship(node, subtypeNode, RelationshipType.withName("TYPE_OF"), log) != null)
                         relationshipsCreated++;
                 }

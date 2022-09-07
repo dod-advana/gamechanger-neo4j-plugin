@@ -44,7 +44,7 @@ public class CreateNodesFromJsonTest {
 
             NullLog log = NullLog.getInstance();
 
-            Util.Outgoing expected = new Util.Outgoing(7, 11, 51);
+            Util.Outgoing expected = new Util.Outgoing(8, 12, 52);
             Util.Outgoing actual = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx, log);
             Util.Outgoing duplicate = testClass.handleCreateDocumentNodesFromJson(testDocumentJson, tx, log);
 
