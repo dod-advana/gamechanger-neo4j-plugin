@@ -183,40 +183,40 @@ public class CreateNodesFromJson {
             List<String> references = getStringListFromJsonArray(jsonNode.get("ref_list"));
 
             Map<String, Object> properties = Map.ofEntries(
-                    entry("doc_id", docId),
-                    entry("keyw_5", keyw_5),
-                    entry("topics", topicStrings),
-                    entry("ref_list", references),
-                    entry("filename", jsonNode.get("filename").asText("")),
-                    entry("title", jsonNode.get("title").asText().replace("\"", "'")),
-                    entry("display_title_s", jsonNode.get("display_title_s").asText("").replace("\"", "'")),
-                    entry("display_org_s", jsonNode.get("display_org_s").asText("")),
-                    entry("display_doc_type_s", jsonNode.get("display_doc_type_s").asText("")),
-                    entry("access_timestamp_dt", jsonNode.get("access_timestamp_dt").asText("")),
-                    entry("publication_date_dt", jsonNode.get("publication_date_dt").asText("")),
-                    entry("crawler_used_s", jsonNode.get("crawler_used_s").asText("")),
-                    entry("source_fqdn_s", jsonNode.get("source_fqdn_s").asText("")),
-                    entry("source_page_url_s", jsonNode.get("source_page_url_s").asText("")),
-                    entry("download_url_s", jsonNode.get("download_url_s").asText("")),
-                    entry("cac_login_required_b", jsonNode.get("cac_login_required_b").asBoolean(false)),
-                    entry("doc_num", docNum),
-                    entry("doc_type", docType),
-                    entry("summary_30", jsonNode.get("summary_30").asText().replace("\"", "'").replace("\\", "/")),
-                    entry("type", jsonNode.get("type").asText("")),
-                    entry("name", jsonNode.get("filename").asText("").split(".pdf")[0]),
-                    entry("ref_name", refName),
-                    entry("page_count", jsonNode.get("page_count").asInt(0)),
-                    entry("init_date", jsonNode.get("init_date").asText("")),
-                    entry("change_date", jsonNode.get("change_date").asText("")),
-                    entry("author", jsonNode.get("author").asText("")),
-                    entry("signature", jsonNode.get("signature").asText("")),
-                    entry("subject", jsonNode.get("subject").asText("")),
-                    entry("classification", jsonNode.get("classification").asText("")),
-                    entry("group_s", jsonNode.get("group_s").asText("")),
-                    entry("pagerank_r", jsonNode.get("pagerank_r").asDouble(0)),
-                    entry("kw_doc_score_r", jsonNode.get("kw_doc_score_r").asDouble(0)),
-                    entry("version_hash_s", jsonNode.get("version_hash_s").asText("")),
-                    entry("is_revoked_b", jsonNode.get("is_revoked_b").asBoolean(false))
+                entry("doc_id", docId),
+                entry("keyw_5", keyw_5),
+                entry("topics", topicStrings),
+                entry("ref_list", references),
+                entry("filename", jsonNode.get("filename").asText("")),
+                entry("title", jsonNode.get("title").asText().replace("\"", "'")),
+                entry("display_title_s", jsonNode.get("display_title_s").asText("").replace("\"", "'")),
+                entry("display_org_s", jsonNode.get("display_org_s").asText("")),
+                entry("display_doc_type_s", jsonNode.get("display_doc_type_s").asText("")),
+                entry("access_timestamp_dt", jsonNode.get("access_timestamp_dt").asText("")),
+                entry("publication_date_dt", jsonNode.get("publication_date_dt").asText("")),
+                entry("crawler_used_s", jsonNode.get("crawler_used_s").asText("")),
+                entry("source_fqdn_s", jsonNode.get("source_fqdn_s").asText("")),
+                entry("source_page_url_s", jsonNode.get("source_page_url_s").asText("")),
+                entry("download_url_s", jsonNode.get("download_url_s").asText("")),
+                entry("cac_login_required_b", jsonNode.get("cac_login_required_b").asBoolean(false)),
+                entry("doc_num", docNum),
+                entry("doc_type", docType),
+                entry("summary_30", jsonNode.get("summary_30").asText().replace("\"", "'").replace("\\", "/")),
+                entry("type", jsonNode.get("type").asText("")),
+                entry("name", jsonNode.get("filename").asText("").split(".pdf")[0]),
+                entry("ref_name", refName),
+                entry("page_count", jsonNode.get("page_count").asInt(0)),
+                entry("init_date", jsonNode.get("init_date").asText("")),
+                entry("change_date", jsonNode.get("change_date").asText("")),
+                entry("author", jsonNode.get("author").asText("")),
+                entry("signature", jsonNode.get("signature").asText("")),
+                entry("subject", jsonNode.get("subject").asText("")),
+                entry("classification", jsonNode.get("classification").asText("")),
+                entry("group_s", jsonNode.get("group_s").asText("")),
+                entry("pagerank_r", jsonNode.get("pagerank_r").asDouble(0)),
+                entry("kw_doc_score_r", jsonNode.get("kw_doc_score_r").asDouble(0)),
+                entry("version_hash_s", jsonNode.get("version_hash_s").asText("")),
+                entry("is_revoked_b", jsonNode.get("is_revoked_b").asBoolean(false))
             );
 
             propertiesSet += setProperties(node, properties);
@@ -252,16 +252,16 @@ public class CreateNodesFromJson {
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                        entry("name", entityNode.get("Agency_Name").asText("")),
-                        entry("aliases", entityNode.get("Agency_Aliases").asText("")),
-                        entry("website", entityNode.get("Website").asText("")),
-                        entry("image", entityNode.get("Agency_Image").asText("")),
-                        entry("address", entityNode.get("Address").asText("")),
-                        entry("phone", entityNode.get("Phone").asText("")),
-                        entry("tty", entityNode.get("TTY").asText("")),
-                        entry("tollfree", entityNode.get("TollFree").asText("")),
-                        entry("branch", entityNode.get("Government_Branch").asText("")),
-                        entry("type", "organization")
+                    entry("name", entityNode.get("Agency_Name").asText("")),
+                    entry("aliases", entityNode.get("Agency_Aliases").asText("")),
+                    entry("website", entityNode.get("Website").asText("")),
+                    entry("image", entityNode.get("Agency_Image").asText("")),
+                    entry("address", entityNode.get("Address").asText("")),
+                    entry("phone", entityNode.get("Phone").asText("")),
+                    entry("tty", entityNode.get("TTY").asText("")),
+                    entry("tollfree", entityNode.get("TollFree").asText("")),
+                    entry("branch", entityNode.get("Government_Branch").asText("")),
+                    entry("type", "organization")
                 );
 
                 propertiesSet += setProperties(node, properties);
@@ -328,9 +328,9 @@ public class CreateNodesFromJson {
             }
         }
         return Map.ofEntries(
-                entry(nodesCreatedString, nodesCreated),
-                entry(propertiesSetString, propertiesSet),
-                entry(relationshipsCreatedString, relationshipsCreated)
+            entry(nodesCreatedString, nodesCreated),
+            entry(propertiesSetString, propertiesSet),
+            entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
@@ -364,9 +364,9 @@ public class CreateNodesFromJson {
         }
 
         return Map.ofEntries(
-                entry(nodesCreatedString, nodesCreated),
-                entry(propertiesSetString, propertiesSet),
-                entry(relationshipsCreatedString, relationshipsCreated)
+            entry(nodesCreatedString, nodesCreated),
+            entry(propertiesSetString, propertiesSet),
+            entry(relationshipsCreatedString, relationshipsCreated)
         );
     }
 
@@ -398,9 +398,9 @@ public class CreateNodesFromJson {
             }
 
             return Map.ofEntries(
-                    entry(nodesCreatedString, nodesCreated),
-                    entry(propertiesSetString, propertiesSet),
-                    entry(relationshipsCreatedString, relationshipsCreated)
+                entry(nodesCreatedString, nodesCreated),
+                entry(propertiesSetString, propertiesSet),
+                entry(relationshipsCreatedString, relationshipsCreated)
             );
         } catch (Exception e) {
             throw new RuntimeException("Can't parse authority node logic", e);
@@ -429,11 +429,11 @@ public class CreateNodesFromJson {
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                        entry("name", orgName),
-                        entry("aliases", orgNode.get("Aliases").asText("")),
-                        entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
-                        entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
-                        entry("type", "organization")
+                    entry("name", orgName),
+                    entry("aliases", orgNode.get("Aliases").asText("")),
+                    entry("isDODComponent", orgNode.get("DoDComponent").asBoolean(false)),
+                    entry("isOSDComponent", orgNode.get("OSDComponent").asBoolean(false)),
+                    entry("type", "organization")
                 );
 
                 propertiesSet += setProperties(node, properties);
@@ -521,9 +521,9 @@ public class CreateNodesFromJson {
                 }
 
                 Map<String, Object> properties = Map.ofEntries(
-                        entry("name", roleName),
-                        entry("aliases", roleNode.get("Aliases").asText("")),
-                        entry("type", "role")
+                    entry("name", roleName),
+                    entry("aliases", roleNode.get("Aliases").asText("")),
+                    entry("type", "role")
                 );
 
                 propertiesSet += setProperties(node, properties);
