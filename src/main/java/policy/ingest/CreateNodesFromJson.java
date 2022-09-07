@@ -267,6 +267,7 @@ public class CreateNodesFromJson {
                 propertiesSet += setProperties(node, properties);
 
                 Node parentNode = tx.findNode(Label.label("Entity"), "name", parentName);
+
                 if (isNull(parentNode)) {
                     parentNode = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                     parentNode.setProperty("name", parentName);
@@ -374,11 +375,16 @@ public class CreateNodesFromJson {
             Integer nodesCreated = 0;
             Integer propertiesSet = 0;
             Integer relationshipsCreated = 0;
-            if (authorityName.equals("Dept. of Defense")) {
-                authorityName = "United States Department of Defense";
-            }
 
             Node tmp = tx.findNode(Label.label("Entity"), "name", authorityName);
+            if (isNull(tmp)) {
+                Result result = tx.execute("MATCH (n:Entity) WHERE '" + authorityName + "' in split(n.aliases,';') RETURN n");
+                while (result.hasNext()) {
+                    Map<String, Object> row = result.next();
+                    tmp = (Node) row.get("n");
+                }
+            }
+
             if (isNull(tmp)) {
                 tmp = tx.createNode(Util.labels(Collections.singletonList("Entity")));
                 tmp.setProperty("name", authorityName);
@@ -546,7 +552,7 @@ public class CreateNodesFromJson {
                         propertiesSet++;
                     }
                     // Only add "HAS_ROLE" between org/role if the role is not "HEAD" of the org
-                    if (Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log) == false) {
+                    if (!Util.checkNodeRelationshipExists(orgParentNode, node, RelationshipType.withName("HAS_HEAD"), log)) {
                         if (Util.createNonDuplicateRelationship(orgParentNode, node, RelationshipType.withName("HAS_ROLE"), log) != null)
                             relationshipsCreated++;
                     }
