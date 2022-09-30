@@ -1,8 +1,8 @@
 ARG BASE_BUILDER_IMAGE=registry.lab.boozallencsn.com/ironbank-mirror/ironbank/redhat/ubi/ubi8:8.6
 ARG IB_NEO4J_IMAGE=registry.lab.boozallencsn.com/ironbank-mirror/ironbank/opensource/neo4j/neo4j:4.4.7
 ARG NEO4J_PLUGIN_IMAGE=registry.lab.boozallencsn.com/docker-mirror/library/neo4j:4.4.7
-ARG GDS_VERSION=2.1.9
-
+# ARG GDS_VERSION=2.1.9
+ARG GDS_VERSION=1.8.7
 #####
 ## ## BUILDER IMAGE
 #####
@@ -46,7 +46,7 @@ RUN chmod +x /build-src/docker/plugin-downloader.sh \
   && /build-src/docker/plugin-downloader.sh
 
 FROM gradle:7.4.2-jdk11 as gds-builder
-ARG GDS_VERSION=2.1.9
+ARG GDS_VERSION=1.8.7
 
 WORKDIR /app
 
@@ -73,7 +73,7 @@ RUN sed -i "s/enabled=0/enabled=1/" /etc/dnf/plugins/subscription-manager.conf\
 
 USER neo4j
 
-ARG GDS_VERSION=2.1.9
+ARG GDS_VERSION=1.8.7
 
 ENV NEO4J_dbms_security_procedures_unrestricted="gds.*,apoc.*,policy.*"
 ENV NEO4J_dbms_security_procedures_whitelist="gds.*,apoc.*,policy.*"
